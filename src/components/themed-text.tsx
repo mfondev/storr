@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
   },
   default: {
     fontSize: 16,
-    lineHeight: 24,
+    // lineHeight: 24,
     fontWeight: 500,
   },
   title: {
@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 32,
-    lineHeight: 44,
+    // lineHeight: 44,
     fontWeight: 600,
   },
   link: {
