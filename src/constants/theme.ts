@@ -3,45 +3,55 @@
  * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
  */
 
-import '@/global.css';
+import "@/global.css";
 
-import { Platform } from 'react-native';
+import { Platform } from "react-native";
 
 export const Colors = {
   light: {
-    text: '#1C2620',
-    textSecondary: '#3E4A43',
+    text: "#1C2620",
+    textSecondary: "#3E4A43",
+    add_item_text: "#EDEAE1",
 
-    background: '#F6F4EE',
-    card: '#FFFFFF',
-    border: '#E3DFD3',
+    background: "#FFFFFF",
+    card: "#FFFFFF",
 
-    accent: '#245240',
-    accentTint: '#E4EEE8',
+    card_add_item: "#1B221E",
+    card_scan: "#FFFFFF",
 
-    amber: '#B4791C',
-    amberTint: '#F6EBD8',
+    border: "#E3DFD3",
 
-    coral: '#B4402F',
-    coralTint: '#F5E4E0',
+    accent: "#245240",
+    accentTint: "#E4EEE8",
+
+    amber: "#B4791C",
+    amberTint: "#F6EBD8",
+
+    coral: "#B4402F",
+    coralTint: "#F5E4E0",
   },
 
   dark: {
-    text: '#EDEAE1',
-    textSecondary: '#B9B3A4',
+    text: "#EDEAE1",
+    textSecondary: "#B9B3A4",
+    add_item_text: "#1C2620",
 
-    background: '#15181A',
-    card: '#1E2225',
-    border: '#31363A',
+    background: "#15181A",
+    card: "#1E2225",
 
-    accent: '#6FAF93',
-    accentTint: '#1E2E27',
+    card_add_item: "#EAE7DD",
+    card_scan: "#1E2225",
 
-    amber: '#D9A24B',
-    amberTint: '#332A17',
+    border: "#31363A",
 
-    coral: '#E2897A',
-    coralTint: '#33201C',
+    accent: "#6FAF93",
+    accentTint: "#1E2E27",
+
+    amber: "#D9A24B",
+    amberTint: "#332A17",
+
+    coral: "#E2897A",
+    coralTint: "#33201C",
   },
 } as const;
 
@@ -50,25 +60,25 @@ export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
 export const Fonts = Platform.select({
   ios: {
     /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: 'system-ui',
+    sans: "system-ui",
     /** iOS `UIFontDescriptorSystemDesignSerif` */
-    serif: 'ui-serif',
+    serif: "ui-serif",
     /** iOS `UIFontDescriptorSystemDesignRounded` */
-    rounded: 'ui-rounded',
+    rounded: "ui-rounded",
     /** iOS `UIFontDescriptorSystemDesignMonospaced` */
-    mono: 'ui-monospace',
+    mono: "ui-monospace",
   },
   default: {
-    sans: 'normal',
-    serif: 'serif',
-    rounded: 'normal',
-    mono: 'monospace',
+    sans: "normal",
+    serif: "serif",
+    rounded: "normal",
+    mono: "monospace",
   },
   web: {
-    sans: 'var(--font-display)',
-    serif: 'var(--font-serif)',
-    rounded: 'var(--font-rounded)',
-    mono: 'var(--font-mono)',
+    sans: "var(--font-display)",
+    serif: "var(--font-serif)",
+    rounded: "var(--font-rounded)",
+    mono: "var(--font-mono)",
   },
 });
 

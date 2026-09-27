@@ -1,25 +1,23 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from "react-native";
 
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { useTheme } from '@/hooks/use-theme';
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import { useTheme } from "@/hooks/use-theme";
 
 export default function Index() {
   const theme = useTheme();
+  console.log(theme);
 
   return (
     <ThemedView style={styles.container}>
-
-      {/* Buttons */}
       <View style={styles.buttonRow}>
-
         <Pressable
-          style={[
-            styles.button,
-            { backgroundColor: theme.accent },
-          ]}
+          style={[styles.button, { backgroundColor: theme.card_add_item }]}
         >
-          <ThemedText style={styles.addButtonText}>
+          <ThemedText
+            type="default"
+            style={[styles.addButtonText, { color: theme.add_item_text }]}
+          >
             + Add item
           </ThemedText>
         </Pressable>
@@ -28,52 +26,35 @@ export default function Index() {
           style={[
             styles.button,
             {
-              backgroundColor: theme.card,
+              backgroundColor: theme.card_scan,
               borderColor: theme.border,
-              borderWidth: 2,
+              borderWidth: 1,
             },
           ]}
         >
-          <ThemedText>
-            Scan
-          </ThemedText>
+          <ThemedText type="default">Scan</ThemedText>
         </Pressable>
-
       </View>
-
-
-      {/* Attention */}
-      <ThemedView
-        type="amberTint"
-        style={styles.attention}
-      >
-        <ThemedView style={styles.attentionContent}>
-
-          <ThemedText
-            style={[
-              styles.attentionTitle,
-              { color: theme.amber },
-            ]}
-          >
-            Attention needed
-          </ThemedText>
-
-          <ThemedText style={styles.secondaryText}>
-            3 warranties expiring soon
-          </ThemedText>
-
-        </ThemedView>
-
-        <ThemedText
-          style={[
-            styles.review,
-            { color: theme.amber },
-          ]}
-        >
-          Review
-        </ThemedText>
+      <ThemedView >
+        <View style={[styles.attention, { backgroundColor: theme.amberTint }]}>
+          <View>
+            <ThemedText
+              type="default"
+              style={[, { color: theme.amber, fontWeight: "700" }]}
+            >
+              Attention needed
+            </ThemedText>
+            <ThemedText type="smallBold" style={styles.secondaryText}>
+              3 warranties expiring soon
+            </ThemedText>
+          </View>
+          <View>
+            <ThemedText type="small" style={[{ color: theme.amber }]}>
+              Review
+            </ThemedText>
+          </View>
+        </View>
       </ThemedView>
-
     </ThemedView>
   );
 }
@@ -81,53 +62,44 @@ export default function Index() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
-    gap: 24,
+    // padding: 16,
+    paddingVertical: 16,
+    gap: 20,
   },
 
   buttonRow: {
-    flexDirection: 'row',
-    gap: 16,
+    flexDirection: "row",
+    gap: 12,
   },
 
   button: {
     flex: 1,
-    height: 90,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
+    height: 50,
+    borderRadius: 15,
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   addButtonText: {
-    color: '#FFFFFF',
-    fontSize: 26,
-    fontWeight: '700',
+    color: "#FFFFFF",
+    fontWeight: "700",
   },
 
   attention: {
-    minHeight: 128,
-    borderRadius: 26,
-    padding: 24,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    minHeight: 80,
+    borderRadius: 15,
+    // marginTop: 55,
+    padding: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
 
   attentionContent: {
     gap: 4,
   },
 
-  attentionTitle: {
-    fontSize: 26,
-    fontWeight: '700',
-  },
-
   secondaryText: {
     opacity: 0.7,
-  },
-
-  review: {
-    fontSize: 20,
-    fontWeight: '700',
   },
 });
