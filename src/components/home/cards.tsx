@@ -6,7 +6,7 @@ import { useTheme } from "@/hooks/use-theme";
 
 export default function Index() {
   const theme = useTheme();
-  console.log(theme);
+  // console.log(theme);
 
   return (
     <ThemedView style={styles.container}>

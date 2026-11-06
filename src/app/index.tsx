@@ -9,7 +9,9 @@ import RecentItems from "@/components/home/recentItems";
 const Index = () => {
   return (
     <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea} edges={["top"]}>
+      <SafeAreaView style={styles.safeArea} 
+      // edges={["top"]}
+      >
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.content}
