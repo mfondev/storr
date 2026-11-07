@@ -11,3 +11,69 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  firstName String
+  lastName  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items     Item[]
+}
+
+enum Category {
+  ELECTRONICS
+  HOME
+  WORK
+  FOOD
+  PERSONAL_CARE
+  OTHER
+}
+
+model Item {
+  id                String    @id @default(cuid())
+  userId            String
+  name              String
+  brand             String?
+  category          Category  @default(OTHER)
+  notes             String?
+
+  // purchase info
+  priceCents        Int?
+  currency          String    @default("USD")
+  purchaseDate      DateTime?
+  store             String?
+  quantity          Int       @default(1)
+
+  // perishables
+  expiryDate        DateTime?
+
+  // devices
+  warrantyExpiresAt DateTime?
+  serialNumber      String?
+
+  // scan / media
+  barcode           String?
+  imageUrl          String?
+  receiptUrl        String?
+
+  // reminders
+  remindDaysBefore  Int       @default(7)
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  user              User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiryDate])
+  @@index([warrantyExpiresAt])
+}
+
+
+
+
