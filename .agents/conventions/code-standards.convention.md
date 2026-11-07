@@ -14,8 +14,8 @@
 
 ## Naming
 - `camelCase` vars/functions, `PascalCase` components/types/classes, `SCREAMING_SNAKE_CASE` module constants.
-- **Files are `kebab-case`,** including components (`themed-text.tsx`, `use-theme.ts`). `src/components/home/recentItems.tsx` is the lone exception, not a precedent.
-- Platform suffix before extension: `app-tabs.web.tsx`. See [navigation](navigation.convention.md).
+- **Files you author are `camelCase`** (`authController.ts`, `authRoutes.ts`, `useTheme.ts`). Auto-generated files (package/CLI output, e.g. `generated/prisma/`) keep their generated names. Existing `kebab-case` files (`themed-text.tsx`, `use-theme.ts`) predate this rule — leave them; don't mass-rename.
+- Platform suffix before extension: `authRoutes.web.ts`. See [navigation](navigation.convention.md).
 - Money is minor units: `priceCents`, never a float.
 - Booleans read as predicates (`isFocused`); say what a thing is, not what it is not.
 
