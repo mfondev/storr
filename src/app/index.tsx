@@ -10,7 +10,7 @@ const Index = () => {
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea} 
-      // edges={["top"]}
+      edges={["left"]}
       >
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -42,11 +42,12 @@ const styles = StyleSheet.create({
 
   safeArea: {
     flex: 1,
+    // paddingTop: 36,
   },
 
   content: {
     paddingHorizontal: 16,
-    // paddingTop: 16,
+    paddingTop: 56,
     // paddingBottom: 30,
     // gap: 20,
   },
