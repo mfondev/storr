@@ -41,3 +41,6 @@ example
 # generated native folders
 /ios
 /android
+
+# Skill output (pr-patrol, pr-doc-creator)
+artifacts/

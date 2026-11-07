@@ -1,41 +1,50 @@
-This is an Expo/React Native mobile application. Prioritize mobile-first patterns, performance, and cross-platform compatibility.
+# AGENTS.md
 
-## Expo has changed — do not trust your training data
+Engineering standards for this repo, for humans and AI agents.
 
-Expo ships breaking changes every SDK release. APIs you remember are likely renamed, moved, or removed. Before writing any code that touches an Expo, EAS, or React Native API:
+**This file is an index — keep it one.** Every rule lives under `.agents/conventions/`, one line here. Read the relevant convention before writing in that area. **Never add a rule inline; put every new rule in a `*.convention.md` and link it here.** One rule, one place.
 
-1. Read the major version of the `expo` package in `package.json`.
-2. Fetch the matching versioned docs: `https://docs.expo.dev/versions/v<major>.0.0/`
-3. For anything else, fetch https://docs.expo.dev/llms.txt — an index of all Expo docs with corrections to common LLM misconceptions. Follow its links to the specific page you need; never answer from memory.
+Storr tracks items users own (price, purchase/warranty/expiry) and reminds them before things lapse. Expo/RN app (`/`) + separate Express/Prisma backend (`backend/`); the app doesn't call the backend yet.
 
-## Commands
+## Critical invariants
+1. **Don't trust training data for Expo/RN APIs** — read the SDK 57 docs first. [expo](.agents/conventions/expo.convention.md)
+2. **Add deps with `npx expo install`,** never `npm/yarn add`. [expo](.agents/conventions/expo.convention.md)
+3. **Never hand-edit `ios/`/`android/`** — configure native in `app.json`. [expo](.agents/conventions/expo.convention.md)
+4. **A tab/route change goes in both `app-tabs.tsx` and `app-tabs.web.tsx`.** [navigation](.agents/conventions/navigation.convention.md)
+5. **No hardcoded color/spacing/font** — use `theme.ts` via `useTheme()`. [theming](.agents/conventions/theming.convention.md)
+6. **Money is integer minor units** (`priceCents`), never a float. [backend-data](.agents/conventions/backend-data.convention.md)
+7. **Import the Prisma client from `backend/generated/prisma`;** CLI needs `--config prisma7.config.ts`. [backend-data](.agents/conventions/backend-data.convention.md)
+8. **No `any`, no silencing assertion.** [code-standards](.agents/conventions/code-standards.convention.md)
+9. **No secret in a log, commit, or response body.** [backend-data](.agents/conventions/backend-data.convention.md)
+10. **Commits are `type(scope):`** (required scope, no attribution trailer); every change reaches `main` via a PR titled as a sentence. [commits](.agents/conventions/commits.convention.md)
 
-Use `bunx` instead of `npx` if the project uses bun (`bun.lock` present).
+## Conventions
+| Convention | Covers |
+|---|---|
+| [code-standards](.agents/conventions/code-standards.convention.md) | Typing, aliases, naming, exports, structure, style. |
+| [project-structure](.agents/conventions/project-structure.convention.md) | The two packages, app/backend layout, agent files. |
+| [expo](.agents/conventions/expo.convention.md) | SDK-first rule, commands, CNG, dev builds, EAS. |
+| [navigation](.agents/conventions/navigation.convention.md) | Expo Router, layout, native+web tab parity. |
+| [theming](.agents/conventions/theming.convention.md) | `theme.ts`, `useTheme()`, `ThemedText`/`ThemedView`. |
+| [backend-data](.agents/conventions/backend-data.convention.md) | Prisma 7 setup, schema, migrations, server. |
+| [commits](.agents/conventions/commits.convention.md) | Conventional Commits, scopes, branches, PRs. |
 
-```bash
-npx expo install <package>  # ALWAYS use instead of npm/yarn/pnpm/bun add — resolves SDK-compatible versions
-npx expo start              # start the dev server
-npx expo lint               # lint
-npx tsc --noEmit            # typecheck
-npx expo-doctor             # diagnose dependency and config issues
-npx expo install --fix      # fix incompatible package versions
-```
+## Skills
+| Skill | Use when |
+|---|---|
+| [pr-patrol](.agents/skills/pr-patrol/SKILL.md) | Reviewing a branch/PR diff against these conventions. |
+| [pr-doc-creator](.agents/skills/pr-doc-creator/SKILL.md) | Writing a PR description and opening/updating the PR. |
 
-Run lint and typecheck before declaring any task done.
-
-## Navigation & Routing
-
-- Use **Expo Router** for all navigation. Routes live in `src/app/` — every file there is a screen, `_layout.tsx` files define navigators. Keep non-route code (components, hooks, utils) outside `src/app/`.
-- Import `Link`, `router`, and `useLocalSearchParams` from `expo-router`.
-- Docs: https://docs.expo.dev/router/introduction.md
-
-## Building with EAS
-
-Use EAS to build, sign, and submit the app in the cloud (`eas build`, `eas submit`) and to ship over-the-air updates (`eas update`) — no local Xcode or Android Studio required. Run EAS CLI as `bunx eas-cli <command>` in Bun projects, or `npx eas-cli@latest <command>` otherwise; substitute that for bare `eas` in docs examples.
-Docs: https://docs.expo.dev/eas/index.md
-
-## Rules
-
-- If `ios/` and `android/` directories do not exist, they are generated (Continuous Native Generation). Never create or edit them by hand — configure native behavior in `app.json` and config plugins.
-- Expo Go only includes its bundled native modules. After adding a library with native code, the app needs a development build: `npx expo run:ios|android` locally, or `eas build --profile development`.
-- Prefer recommended Expo modules over third-party libraries, and check your available skills before adding dependencies. Docs: https://docs.expo.dev/versions/latest/index.md
+## Layout
+| Path | Holds |
+|---|---|
+| `src/app/` | Expo Router routes (one screen per file; `_layout.tsx` = navigators). |
+| `src/components/` | Reusable components (`home/`, `ui/`). |
+| `src/constants/theme.ts` | Colors, `Spacing`, `Fonts`, `MaxContentWidth`. |
+| `src/hooks/` | Hooks. |
+| `backend/src/` | Express server; entry `server.ts`. |
+| `backend/prisma/` | Schema and migrations. |
+| `backend/generated/prisma/` | Generated client (gitignored). |
+| `.agents/conventions/` · `.agents/skills/` | Standards · workflows. |
+| `backend/.agents/skills/` | Vendored Prisma skills. |
+| `artifacts/` | Skill output. Not committed. |
