@@ -1,15 +1,18 @@
-import express, { type Request, type Response } from "express";
+import express from "express";
+
+import authRoutes from "./routes/authRoutes.ts";
+import itemRoutes from "./routes/itemRoutes.ts";
 
 const app = express();
 
-app.get("/", (req: Request, res: Response) => {
-    res.send("Hello World")
+app.use(express.json());
+
+//API Routes
+app.use("/auth", authRoutes);
+app.use("/items", itemRoutes);
+
+const PORT = 3000;
+
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
 });
-
-const PORT = 3000
-
-app.listen(PORT,()=>{
-    console.log("Successful");
-})
-
-
