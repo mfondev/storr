@@ -1,8 +1,8 @@
 import type { Request, Response } from "express";
 
 // Placeholder handlers (no DB yet) so the routes are visible end-to-end.
-export const getItems = (_req: Request, res: Response): void => {
-  res.json({ items: [] });
+export const getItems = (req: Request, res: Response): void => {
+  res.json({ items: req.params.id });
 };
 
 export const getItem = (req: Request, res: Response): void => {
