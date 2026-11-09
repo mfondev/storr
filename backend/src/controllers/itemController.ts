@@ -1,30 +1,32 @@
 import type { Request, Response } from "express";
 import { prisma } from "../config/db.ts";
 
-// List all items that belong to a user.
+// List all items that belong to the logged-in user.
 export const getItems = async (req: Request, res: Response): Promise<void> => {
-  const { userId } = req.body; // later: from the auth token, not the body
+  const userId = req.user?.id; // set by the auth middleware
+  if (!userId) {
+    res.status(401).json({ message: "Not authenticated" });
+    return;
+  }
 
-  const items = await prisma.item.findMany({
-    where: { userId },
-  });
+  const items = await prisma.item.findMany({ where: { userId } });
 
-  res.status(200).json({
-    status: "Success",
-    data: { items },
-  });
+  res.status(200).json({ status: "Success", data: { items } });
 };
 
 // Get a single item by id.
 export const getItem = async (req: Request, res: Response): Promise<void> => {
-  const { id } = req.params; // which item — from the URL (/items/:id)
+  const userId = req.user?.id;
+  if (!userId) {
+    res.status(401).json({ message: "Not authenticated" });
+    return;
+  }
 
+  const { id } = req.params; // which item — from the URL (/items/:id)
   if (typeof id !== "string") {
     res.status(400).json({ message: "Invalid item id" });
     return;
   }
-
-  const { userId } = req.body; // later: req.user.id
 
   const item = await prisma.item.findUnique({ where: { id } });
 
@@ -43,13 +45,18 @@ export const getItem = async (req: Request, res: Response): Promise<void> => {
   res.status(200).json({ status: "Success", item });
 };
 
-// Create a new item for a user.
+// Create a new item for the logged-in user.
 export const createItem = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
+  const userId = req.user?.id; // middleware already confirmed this user exists
+  if (!userId) {
+    res.status(401).json({ message: "Not authenticated" });
+    return;
+  }
+
   const {
-    userId,
     name,
     brand,
     category,
@@ -60,15 +67,6 @@ export const createItem = async (
     warrantyExpiresAt,
     serialNumber,
   } = req.body;
-
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-  });
-
-  if (!user) {
-    res.status(404).json({ message: "Invalid user" });
-    return;
-  }
 
   const item = await prisma.item.create({
     data: {
@@ -96,16 +94,19 @@ export const updateItem = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
-  const { id } = req.params; // which item — from the URL (/items/:id)
+  const userId = req.user?.id;
+  if (!userId) {
+    res.status(401).json({ message: "Not authenticated" });
+    return;
+  }
 
-  // Express 5 types params as string | string[]; narrow to a single string.
+  const { id } = req.params; // which item — from the URL (/items/:id)
   if (typeof id !== "string") {
     res.status(400).json({ message: "Invalid item id" });
     return;
   }
 
   const {
-    userId, // who's asking — from body for now (later: req.user.id)
     name,
     brand,
     category,
@@ -156,14 +157,17 @@ export const updateItem = async (
 
 // Delete an item by id.
 export const deleteItem = async (req: Request, res: Response): Promise<void> => {
-  const { id } = req.params; // which item — from the URL (/items/:id)
+  const userId = req.user?.id;
+  if (!userId) {
+    res.status(401).json({ message: "Not authenticated" });
+    return;
+  }
 
+  const { id } = req.params; // which item — from the URL (/items/:id)
   if (typeof id !== "string") {
     res.status(400).json({ message: "Invalid item id" });
     return;
   }
-
-  const { userId } = req.body; // later: req.user.id
 
   const itemExist = await prisma.item.findUnique({ where: { id } });
 
@@ -181,5 +185,7 @@ export const deleteItem = async (req: Request, res: Response): Promise<void> => 
 
   await prisma.item.delete({ where: { id } });
 
-  res.status(200).json({ status: "Success", message: "item deleted successfully" });
+  res
+    .status(200)
+    .json({ status: "Success", message: "item deleted successfully" });
 };

@@ -1,4 +1,5 @@
 import express from "express";
+import cookieParser from "cookie-parser";
 import authRoutes from "./routes/authRoutes.ts";
 import itemRoutes from "./routes/itemRoutes.ts";
 
@@ -14,6 +15,8 @@ connectDB()
 
 
 app.use(express.json());
+app.use(express.urlencoded({extended: true}))
+app.use(cookieParser())
 
 //API Routes
 app.use("/auth", authRoutes);

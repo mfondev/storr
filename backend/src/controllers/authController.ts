@@ -1,6 +1,7 @@
+import bcrypt from "bcrypt";
 import type { Request, Response } from "express";
 import { prisma } from "../config/db.ts";
-import bcrypt from "bcrypt";
+import { generateToken } from "../utils/generateToken.ts";
 
 export const register = async (
   req: Request,
@@ -20,7 +21,7 @@ export const register = async (
   const salt = await bcrypt.genSalt(11);
   const hashedPassword = await bcrypt.hash(password, salt);
 
-  // creating the user after checking if user already exists and after hashing the password
+  // creating the user after checking it doesn't exist and hashing the password
   const user = await prisma.user.create({
     data: {
       email,
@@ -30,7 +31,21 @@ export const register = async (
     },
   });
 
-  res.status(201).json({ status: "Success", message: "user registered", user });
+  const token = generateToken(user.id, res);
+
+  res.status(201).json({
+    status: "Success",
+    message: "user registered",
+    data: {
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      },
+      token,
+    },
+  });
 };
 
 export const login = async (
@@ -51,6 +66,8 @@ export const login = async (
     return res.status(401).json({ errorMessage: "Invalid Email or Password" });
   }
 
+  const token = generateToken(user.id, res);
+
   res.status(200).json({
     status: "Success",
     data: {
@@ -58,14 +75,18 @@ export const login = async (
         id: user.id,
         email: email,
       },
+      token,
     },
-    message: "Login Successfully",
+    message: "User Logged in Successfully",
   });
 };
 
 export const logout = (_req: Request, res: Response): void => {
+  res.cookie("jwt", "", { httpOnly: true, expires: new Date(0) });
   res.status(200).json({
     status: "success",
     message: "User Logout created Successfully",
   });
 };
+
+//authentication backend jwt
