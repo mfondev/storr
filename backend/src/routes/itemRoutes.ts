@@ -7,8 +7,12 @@ import {
   updateItem,
   deleteItem,
 } from "../controllers/itemController.ts";
+import { protect } from "../middleware/authMiddleware.ts";
 
 const router = Router();
+
+// Every item route requires a logged-in user.
+router.use(protect);
 
 router.get("/", getItems);
 router.get("/:id", getItem);
