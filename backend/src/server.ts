@@ -1,9 +1,11 @@
 import express from "express";
+import cors from "cors";
 import cookieParser from "cookie-parser";
 import authRoutes from "./routes/authRoutes.ts";
 import itemRoutes from "./routes/itemRoutes.ts";
-
+import { errorHandler } from "./middleware/errorMiddleware.ts";
 import { config } from "dotenv";
+
 import { connectDB,disconnectDB } from "./config/db.js";
   
 // Create an Express application
@@ -14,6 +16,14 @@ config()
 connectDB()
 
 
+// Allow the frontend (browser/web) to call this API and send the auth cookie.
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL ?? "http://localhost:8081",
+    credentials: true,
+  }),
+);
+
 app.use(express.json());
 app.use(express.urlencoded({extended: true}))
 app.use(cookieParser())
@@ -21,6 +31,9 @@ app.use(cookieParser())
 //API Routes
 app.use("/auth", authRoutes);
 app.use("/items", itemRoutes);
+
+// Error handler — must be last, after all routes.
+app.use(errorHandler);
 
 const PORT = 3000;
 
