@@ -1,4 +1,5 @@
 import express from "express";
+import cors from "cors";
 import cookieParser from "cookie-parser";
 import authRoutes from "./routes/authRoutes.ts";
 import itemRoutes from "./routes/itemRoutes.ts";
@@ -14,6 +15,14 @@ const app = express();
 config()
 connectDB()
 
+
+// Allow the frontend (browser/web) to call this API and send the auth cookie.
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL ?? "http://localhost:8081",
+    credentials: true,
+  }),
+);
 
 app.use(express.json());
 app.use(express.urlencoded({extended: true}))
