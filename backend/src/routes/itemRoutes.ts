@@ -8,6 +8,11 @@ import {
   deleteItem,
 } from "../controllers/itemController.ts";
 import { protect } from "../middleware/authMiddleware.ts";
+import { validateRequest } from "../middleware/validateRequestMiddleware.ts";
+import {
+  createItemSchema,
+  updateItemSchema,
+} from "../validators/itemValidators.ts";
 
 const router = Router();
 
@@ -16,8 +21,8 @@ router.use(protect);
 
 router.get("/", getItems);
 router.get("/:id", getItem);
-router.post("/", createItem);
-router.put("/:id", updateItem);
+router.post("/", validateRequest(createItemSchema), createItem);
+router.put("/:id", validateRequest(updateItemSchema), updateItem);
 router.delete("/:id", deleteItem);
 
 export default router;
