@@ -6,7 +6,7 @@ import itemRoutes from "./routes/itemRoutes.ts";
 import { errorHandler } from "./middleware/errorMiddleware.ts";
 import { config } from "dotenv";
 
-import { connectDB,disconnectDB } from "./config/db.js";
+import { connectDB,disconnectDB } from "./config/db.ts";
   
 // Create an Express application
 // The app will handle requests and responses from clients
@@ -26,7 +26,7 @@ app.use(
 
 app.use(express.json());
 app.use(express.urlencoded({extended: true}))
-app.use(cookieParser())
+app.use(cookieParser()) 
 
 //API Routes
 app.use("/auth", authRoutes);
