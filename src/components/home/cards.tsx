@@ -1,3 +1,4 @@
+import { router } from "expo-router";
 import { Pressable, StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
@@ -12,6 +13,7 @@ export default function Index() {
     <ThemedView style={styles.container}>
       <View style={styles.buttonRow}>
         <Pressable
+          onPress={() => router.push("/add-item")}
           style={[styles.button, { backgroundColor: theme.card_add_item }]}
         >
           <ThemedText
@@ -36,7 +38,10 @@ export default function Index() {
         </Pressable>
       </View>
       <ThemedView >
-        <View style={[styles.attention, { backgroundColor: theme.amberTint }]}>
+        <Pressable
+          onPress={() => router.push("/warranties")}
+          style={[styles.attention, { backgroundColor: theme.amberTint }]}
+        >
           <View>
             <ThemedText
               type="default"
@@ -53,7 +58,7 @@ export default function Index() {
               Review
             </ThemedText>
           </View>
-        </View>
+        </Pressable>
       </ThemedView>
     </ThemedView>
   );

@@ -16,6 +16,9 @@ export const Colors = {
     background: "#FFFFFF",
     card: "#FFFFFF",
 
+    backgroundElement: "#F6F4EE",
+    backgroundSelected: "#E4EEE8",
+
     card_add_item: "#1B221E",
     card_scan: "#FFFFFF",
 
@@ -38,6 +41,9 @@ export const Colors = {
 
     background: "#15181A",
     card: "#1E2225",
+
+    backgroundElement: "#1E2225",
+    backgroundSelected: "#1E2E27",
 
     card_add_item: "#EAE7DD",
     card_scan: "#1E2225",
