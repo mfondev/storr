@@ -1,80 +1,101 @@
 import { router } from 'expo-router';
+import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
+import { AppButton } from '@/components/ui/appButton';
+import { BrandMark } from '@/components/ui/brandMark';
+import { Icon } from '@/components/ui/icon';
 import { InputField } from '@/components/ui/inputField';
-import { PrimaryButton } from '@/components/ui/primaryButton';
+import { Screen } from '@/components/ui/screen';
+import { IconSize, Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 
 export default function SignIn() {
-  // UI only for now — no auth yet. The button navigates as a placeholder.
+  // UI only — no auth yet. The primary button navigates as a placeholder.
+  const theme = useTheme();
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-        <View style={styles.header}>
-          <ThemedText type="small" themeColor="textSecondary">
-            Welcome back
+    <Screen variant="stack" avoidKeyboard>
+      <View style={styles.brand}>
+        <BrandMark size={56} />
+        <View style={styles.heading}>
+          <ThemedText type="title">Welcome back</ThemedText>
+          <ThemedText type="default" themeColor="textSecondary">
+            Sign in to pick up where you left off.
           </ThemedText>
-          <ThemedText type="subtitle">Sign in</ThemedText>
         </View>
+      </View>
 
-        <View style={styles.form}>
-          <InputField
-            label="Email"
-            placeholder="you@example.com"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoComplete="email"
-          />
-          <InputField
-            label="Password"
-            placeholder="••••••••"
-            secureTextEntry
-            autoComplete="password"
-          />
-        </View>
+      <View style={styles.form}>
+        <InputField
+          label="Email"
+          icon="mail-outline"
+          placeholder="you@example.com"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoComplete="email"
+          textContentType="emailAddress"
+        />
+        <InputField
+          label="Password"
+          icon="lock-closed-outline"
+          placeholder="Your password"
+          secureTextEntry={!isPasswordVisible}
+          autoComplete="password"
+          textContentType="password"
+          rightSlot={
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={isPasswordVisible ? 'Hide password' : 'Show password'}
+              onPress={() => setIsPasswordVisible((value) => !value)}
+              hitSlop={8}>
+              <Icon
+                name={isPasswordVisible ? 'eye-off-outline' : 'eye-outline'}
+                size={IconSize.md}
+                color={theme.textTertiary}
+              />
+            </Pressable>
+          }
+        />
+      </View>
 
-        <View style={styles.footer}>
-          <PrimaryButton label="Sign in" onPress={() => router.replace('/')} />
-          <Pressable onPress={() => router.push('/sign-up')} hitSlop={8} style={styles.switchRow}>
-            <ThemedText type="small" themeColor="textSecondary">
-              Don&apos;t have an account?{' '}
-            </ThemedText>
-            <ThemedText type="smallBold" themeColor="accent">
-              Sign up
-            </ThemedText>
-          </Pressable>
-        </View>
-      </SafeAreaView>
-    </ThemedView>
+      <AppButton label="Sign in" onPress={() => router.replace('/')} style={styles.submit} />
+
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => router.push('/sign-up')}
+        hitSlop={8}
+        style={styles.switchRow}>
+        <ThemedText type="small" themeColor="textSecondary">
+          Don&apos;t have an account?{' '}
+        </ThemedText>
+        <ThemedText type="linkPrimary">Create one</ThemedText>
+      </Pressable>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  brand: {
+    gap: Spacing.xxl,
+    marginTop: Spacing.xxl,
+    marginBottom: Spacing.xxxl,
   },
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 24,
-  },
-  header: {
-    gap: 4,
-    marginBottom: 32,
+  heading: {
+    gap: Spacing.xs,
   },
   form: {
-    gap: 18,
+    gap: Spacing.xl,
   },
-  footer: {
-    marginTop: 'auto',
-    gap: 18,
-    paddingBottom: 12,
+  submit: {
+    marginTop: Spacing.xxxl,
   },
   switchRow: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+    marginTop: Spacing.xxl,
   },
 });

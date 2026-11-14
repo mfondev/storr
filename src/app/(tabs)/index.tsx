@@ -1,54 +1,64 @@
-import { ScrollView, StyleSheet } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { router } from 'expo-router';
+import { Pressable, StyleSheet, View } from 'react-native';
 
-import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
-import Cards from "@/components/home/cards";
-import RecentItems from "@/components/home/recentItems";
+import AttentionBanner from '@/components/home/attentionBanner';
+import CategoriesRow from '@/components/home/categoriesRow';
+import ExpiringSoon from '@/components/home/expiringSoon';
+import HeroCard from '@/components/home/heroCard';
+import QuickActions from '@/components/home/quickActions';
+import RecentItems from '@/components/home/recentItems';
+import { ThemedText } from '@/components/themed-text';
+import { Avatar } from '@/components/ui/avatar';
+import { Screen } from '@/components/ui/screen';
+import { sampleUser } from '@/constants/sampleData';
+import { Spacing } from '@/constants/theme';
 
-const Index = () => {
+function greetingForNow(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 18) return 'Good afternoon';
+  return 'Good evening';
+}
+
+export default function Index() {
+  const [firstName] = sampleUser.name.split(' ');
+
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea} 
-      edges={["left"]}
-      >
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.content}
-        >
-          <ThemedText type="default">Good morning</ThemedText>
+    <Screen variant="tab">
+      <View style={styles.header}>
+        <View style={styles.greeting}>
+          <ThemedText type="small" themeColor="textSecondary">
+            {greetingForNow()}
+          </ThemedText>
+          <ThemedText type="title">{firstName}</ThemedText>
+        </View>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Open profile"
+          onPress={() => router.push('/profile')}
+          hitSlop={8}>
+          <Avatar name={sampleUser.name} size={44} />
+        </Pressable>
+      </View>
 
-          <ThemedText type="subtitle">Gideon</ThemedText>
-
-          <ThemedText type="subtitle">$1,234.56</ThemedText>
-
-          <ThemedText type="small">124 items tracked</ThemedText>
-
-          <Cards />
-
-          <RecentItems />
-        </ScrollView>
-      </SafeAreaView>
-    </ThemedView>
+      <HeroCard />
+      <QuickActions />
+      <AttentionBanner />
+      <RecentItems />
+      <CategoriesRow />
+      <ExpiringSoon />
+    </Screen>
   );
-};
-
-export default Index;
+}
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: Spacing.xxl,
   },
-
-  safeArea: {
-    flex: 1,
-    // paddingTop: 36,
-  },
-
-  content: {
-    paddingHorizontal: 16,
-    paddingTop: 56,
-    // paddingBottom: 30,
-    // gap: 20,
+  greeting: {
+    gap: Spacing.xxs,
   },
 });

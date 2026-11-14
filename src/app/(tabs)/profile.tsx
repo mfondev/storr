@@ -1,122 +1,174 @@
-import { ScrollView, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
+import { StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
+import { AppButton } from '@/components/ui/appButton';
+import { Avatar } from '@/components/ui/avatar';
+import { Icon, type IconName } from '@/components/ui/icon';
+import { ListRow } from '@/components/ui/listRow';
+import { Screen } from '@/components/ui/screen';
+import { StatusPill } from '@/components/ui/statusPill';
+import { Surface } from '@/components/ui/surface';
+import { sampleTotals, sampleUser } from '@/constants/sampleData';
+import { IconSize, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
-type Row = { label: string; value: string };
+type Row = {
+  label: string;
+  icon: IconName;
+  value?: string;
+  pill?: string;
+  onPress?: () => void;
+};
+
 type Section = { label: string; rows: Row[] };
 
-const sections: Section[] = [
+const SECTIONS: Section[] = [
   {
     label: 'Preferences',
     rows: [
-      { label: 'Notifications', value: 'On' },
-      { label: 'Appearance', value: 'System' },
-      { label: 'Currency', value: 'USD' },
-      { label: 'Categories', value: '4 custom' },
+      { label: 'Notifications', icon: 'notifications-outline', value: 'On' },
+      { label: 'Appearance', icon: 'moon-outline', value: 'System' },
+      { label: 'Currency', icon: 'cash-outline', value: 'USD' },
+      { label: 'Categories', icon: 'pricetags-outline', value: '4 custom' },
     ],
   },
   {
     label: 'Data',
     rows: [
-      { label: 'Storage', value: '1.2 GB used' },
-      { label: 'Backup & sync', value: 'Synced' },
+      { label: 'Storage', icon: 'server-outline', value: '1.2 GB used' },
+      { label: 'Backup & sync', icon: 'cloud-done-outline', pill: 'Synced' },
     ],
   },
   {
     label: 'Account',
     rows: [
-      { label: 'Privacy', value: '›' },
-      { label: 'Security', value: '›' },
-      { label: 'About storr', value: '›' },
+      { label: 'Privacy', icon: 'lock-closed-outline' },
+      { label: 'Security', icon: 'shield-outline' },
+      { label: 'Replay onboarding', icon: 'sparkles-outline', onPress: () => router.push('/onboarding') },
+      { label: 'About storr', icon: 'information-circle-outline' },
     ],
   },
+];
+
+const STATS = [
+  { label: 'Items', value: String(sampleTotals.items) },
+  { label: 'Value', value: sampleTotals.value },
+  { label: 'Covered', value: String(sampleTotals.covered) },
 ];
 
 export default function Profile() {
   const theme = useTheme();
 
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea} edges={['left', 'right']}>
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-          <View style={[styles.avatar, { backgroundColor: theme.accentTint }]} />
-          <ThemedText type="subtitle" style={styles.name}>
-            Gideon Atauba
+    <Screen variant="tab">
+      <View style={styles.identity}>
+        <Avatar name={sampleUser.name} size={76} />
+        <View style={styles.identityText}>
+          <ThemedText type="subtitle">{sampleUser.name}</ThemedText>
+          <ThemedText type="small" themeColor="textSecondary">
+            {sampleUser.email}
           </ThemedText>
-          <ThemedText type="small" themeColor="textSecondary" style={styles.email}>
-            gideon@storr.app
-          </ThemedText>
+        </View>
+      </View>
 
-          {sections.map((section) => (
-            <View key={section.label} style={styles.section}>
-              <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionLabel}>
-                {section.label}
-              </ThemedText>
-              <View style={[styles.group, { backgroundColor: theme.card, borderColor: theme.border }]}>
-                {section.rows.map((row, index) => (
-                  <View
-                    key={row.label}
-                    style={[
-                      styles.row,
-                      index < section.rows.length - 1 && {
-                        borderBottomWidth: 1,
-                        borderBottomColor: theme.border,
-                      },
-                    ]}>
-                    <ThemedText type="small">{row.label}</ThemedText>
+      <View style={styles.stats}>
+        {STATS.map((stat) => (
+          <Surface key={stat.label} variant="muted" padding="md" radius="md" style={styles.stat}>
+            <ThemedText type="heading">{stat.value}</ThemedText>
+            <ThemedText type="caption" themeColor="textSecondary">
+              {stat.label}
+            </ThemedText>
+          </Surface>
+        ))}
+      </View>
+
+      {SECTIONS.map((section) => (
+        <View key={section.label} style={styles.section}>
+          <ThemedText type="label" themeColor="textTertiary" style={styles.sectionLabel}>
+            {section.label}
+          </ThemedText>
+          <Surface padding="none">
+            {section.rows.map((row, index) => (
+              <ListRow
+                key={row.label}
+                title={row.label}
+                leading={
+                  <View style={[styles.rowIcon, { backgroundColor: theme.backgroundElement }]}>
+                    <Icon name={row.icon} size={IconSize.md} color={theme.textSecondary} />
+                  </View>
+                }
+                trailing={
+                  row.pill ? (
+                    <StatusPill label={row.pill} tone="success" dot />
+                  ) : row.value ? (
                     <ThemedText type="small" themeColor="textSecondary">
                       {row.value}
                     </ThemedText>
-                  </View>
-                ))}
-              </View>
-            </View>
-          ))}
-        </ScrollView>
-      </SafeAreaView>
-    </ThemedView>
+                  ) : undefined
+                }
+                chevron
+                onPress={row.onPress}
+                isLast={index === section.rows.length - 1}
+              />
+            ))}
+          </Surface>
+        </View>
+      ))}
+
+      <AppButton
+        label="Sign out"
+        icon="log-out-outline"
+        variant="destructive"
+        onPress={() => router.replace('/sign-in')}
+        style={styles.signOut}
+      />
+      <ThemedText type="caption" themeColor="textTertiary" style={styles.version}>
+        storr 1.0.0
+      </ThemedText>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  safeArea: { flex: 1 },
-  content: {
-    paddingHorizontal: 16,
-    paddingTop: 56,
-    paddingBottom: 40,
+  identity: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.lg,
+    marginBottom: Spacing.xxl,
   },
-  avatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    marginBottom: 12,
+  identityText: {
+    flex: 1,
+    gap: Spacing.xxs,
   },
-  name: {
-    fontSize: 24,
+  stats: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    marginBottom: Spacing.xxxl,
   },
-  email: {
-    marginTop: 2,
-    marginBottom: 24,
+  stat: {
+    flex: 1,
+    gap: Spacing.xxs,
   },
   section: {
-    marginBottom: 22,
+    marginBottom: Spacing.xxl,
   },
   sectionLabel: {
-    marginBottom: 8,
+    marginBottom: Spacing.sm,
+    paddingHorizontal: Spacing.xs,
   },
-  group: {
-    borderWidth: 1,
-    borderRadius: 14,
-    paddingHorizontal: 14,
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  rowIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: Radius.sm,
     alignItems: 'center',
-    paddingVertical: 14,
+    justifyContent: 'center',
+  },
+  signOut: {
+    marginTop: Spacing.sm,
+  },
+  version: {
+    textAlign: 'center',
+    marginTop: Spacing.lg,
   },
 });

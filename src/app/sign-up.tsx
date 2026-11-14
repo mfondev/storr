@@ -1,104 +1,130 @@
 import { router } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useState } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
+import { AppButton } from '@/components/ui/appButton';
+import { BrandMark } from '@/components/ui/brandMark';
+import { Icon } from '@/components/ui/icon';
 import { InputField } from '@/components/ui/inputField';
-import { PrimaryButton } from '@/components/ui/primaryButton';
+import { Screen } from '@/components/ui/screen';
+import { IconSize, Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 
 export default function SignUp() {
-  // UI only for now — no auth yet. The button navigates as a placeholder.
+  // UI only — no auth yet. The primary button navigates as a placeholder.
+  const theme = useTheme();
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.content}
-          keyboardShouldPersistTaps="handled">
-          <View style={styles.header}>
-            <ThemedText type="small" themeColor="textSecondary">
-              Get started
-            </ThemedText>
-            <ThemedText type="subtitle">Create account</ThemedText>
-          </View>
+    <Screen variant="stack" avoidKeyboard>
+      <View style={styles.brand}>
+        <BrandMark size={56} />
+        <View style={styles.heading}>
+          <ThemedText type="title">Create your account</ThemedText>
+          <ThemedText type="default" themeColor="textSecondary">
+            Keep every receipt, warranty and detail in one calm place.
+          </ThemedText>
+        </View>
+      </View>
 
-          <View style={styles.form}>
-            <View style={styles.nameRow}>
-              <View style={styles.nameField}>
-                <InputField label="First name" placeholder="Gideon" autoComplete="given-name" />
-              </View>
-              <View style={styles.nameField}>
-                <InputField label="Last name" placeholder="Atauba" autoComplete="family-name" />
-              </View>
-            </View>
-            <InputField
-              label="Email"
-              placeholder="you@example.com"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoComplete="email"
-            />
-            <InputField
-              label="Password"
-              placeholder="At least 6 characters"
-              secureTextEntry
-              autoComplete="new-password"
-            />
-          </View>
-
-          <View style={styles.footer}>
-            <PrimaryButton label="Create account" onPress={() => router.replace('/')} />
-            <Pressable onPress={() => router.push('/sign-in')} hitSlop={8} style={styles.switchRow}>
-              <ThemedText type="small" themeColor="textSecondary">
-                Already have an account?{' '}
-              </ThemedText>
-              <ThemedText type="smallBold" themeColor="accent">
-                Sign in
-              </ThemedText>
+      <View style={styles.form}>
+        <View style={styles.nameRow}>
+          <InputField
+            label="First name"
+            placeholder="Gideon"
+            autoComplete="given-name"
+            containerStyle={styles.nameField}
+          />
+          <InputField
+            label="Last name"
+            placeholder="Atauba"
+            autoComplete="family-name"
+            containerStyle={styles.nameField}
+          />
+        </View>
+        <InputField
+          label="Email"
+          icon="mail-outline"
+          placeholder="you@example.com"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoComplete="email"
+          textContentType="emailAddress"
+        />
+        <InputField
+          label="Password"
+          icon="lock-closed-outline"
+          placeholder="Create a password"
+          hint="At least 6 characters"
+          secureTextEntry={!isPasswordVisible}
+          autoComplete="new-password"
+          textContentType="newPassword"
+          rightSlot={
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={isPasswordVisible ? 'Hide password' : 'Show password'}
+              onPress={() => setIsPasswordVisible((value) => !value)}
+              hitSlop={8}>
+              <Icon
+                name={isPasswordVisible ? 'eye-off-outline' : 'eye-outline'}
+                size={IconSize.md}
+                color={theme.textTertiary}
+              />
             </Pressable>
-          </View>
-        </ScrollView>
-      </SafeAreaView>
-    </ThemedView>
+          }
+        />
+      </View>
+
+      <AppButton label="Create account" onPress={() => router.replace('/')} style={styles.submit} />
+      <ThemedText type="caption" themeColor="textTertiary" style={styles.terms}>
+        By continuing you agree to the storr terms and privacy policy.
+      </ThemedText>
+
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => router.push('/sign-in')}
+        hitSlop={8}
+        style={styles.switchRow}>
+        <ThemedText type="small" themeColor="textSecondary">
+          Already have an account?{' '}
+        </ThemedText>
+        <ThemedText type="linkPrimary">Sign in</ThemedText>
+      </Pressable>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  brand: {
+    gap: Spacing.xxl,
+    marginTop: Spacing.xxl,
+    marginBottom: Spacing.xxxl,
   },
-  safeArea: {
-    flex: 1,
-  },
-  content: {
-    flexGrow: 1,
-    paddingHorizontal: 20,
-    paddingTop: 24,
-    paddingBottom: 12,
-  },
-  header: {
-    gap: 4,
-    marginBottom: 32,
+  heading: {
+    gap: Spacing.xs,
   },
   form: {
-    gap: 18,
+    gap: Spacing.xl,
   },
   nameRow: {
     flexDirection: 'row',
-    gap: 12,
+    gap: Spacing.md,
   },
   nameField: {
     flex: 1,
   },
-  footer: {
-    marginTop: 'auto',
-    gap: 18,
-    paddingTop: 32,
+  submit: {
+    marginTop: Spacing.xxxl,
+  },
+  terms: {
+    textAlign: 'center',
+    marginTop: Spacing.md,
   },
   switchRow: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+    marginTop: Spacing.xxl,
   },
 });

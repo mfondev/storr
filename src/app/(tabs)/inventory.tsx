@@ -1,181 +1,121 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { useTheme } from '@/hooks/use-theme';
+import { CategoryIcon, type Category } from '@/components/ui/categoryIcon';
+import { Chip } from '@/components/ui/chip';
+import { EmptyState } from '@/components/ui/emptyState';
+import { IconButton } from '@/components/ui/iconButton';
+import { InputField } from '@/components/ui/inputField';
+import { ListRow } from '@/components/ui/listRow';
+import { Screen } from '@/components/ui/screen';
+import { PageTitle } from '@/components/ui/screenHeader';
+import { StatusPill } from '@/components/ui/statusPill';
+import { Surface } from '@/components/ui/surface';
+import { sampleCategories, sampleItems, sampleTotals } from '@/constants/sampleData';
+import { Layout, Spacing } from '@/constants/theme';
 
-type WarrantyTone = 'ok' | 'warn' | 'expired';
-
-type InventoryItem = {
-  name: string;
-  category: string;
-  price: string;
-  warranty?: { label: string; tone: WarrantyTone };
-};
-
-const filters = ['All', 'Electronics', 'Home', 'Work', 'Other'] as const;
-
-const items: InventoryItem[] = [
-  { name: 'MacBook Pro 14"', category: 'Electronics', price: '$2,399', warranty: { label: 'Covered', tone: 'ok' } },
-  { name: 'Sony WH-1000XM6', category: 'Electronics', price: '$399', warranty: { label: '7d left', tone: 'warn' } },
-  { name: 'Dyson V15', category: 'Home', price: '$649', warranty: { label: 'Covered', tone: 'ok' } },
-  { name: 'Standing desk', category: 'Work', price: '$410', warranty: { label: 'Expired', tone: 'expired' } },
-  { name: 'Canon EOS R6', category: 'Electronics', price: '$2,499' },
-];
+type Filter = Category | 'All';
 
 export default function Inventory() {
-  const theme = useTheme();
-  const [active, setActive] = useState<string>('All');
+  const [query, setQuery] = useState('');
+  const [filter, setFilter] = useState<Filter>('All');
 
-  const toneColor: Record<WarrantyTone, { bg: string; text: string }> = {
-    ok: { bg: theme.accentTint, text: theme.accent },
-    warn: { bg: theme.amberTint, text: theme.amber },
-    expired: { bg: theme.coralTint, text: theme.coral },
-  };
-
-  const visible = active === 'All' ? items : items.filter((item) => item.category === active);
+  const needle = query.trim().toLowerCase();
+  const visible = sampleItems.filter(
+    (item) =>
+      (filter === 'All' || item.category === filter) &&
+      (needle === '' || item.name.toLowerCase().includes(needle)),
+  );
 
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea} edges={['left', 'right']}>
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.content}>
-          <ThemedText type="small" themeColor="textSecondary">
-            Inventory
+    <Screen variant="tab">
+      <PageTitle
+        eyebrow="Inventory"
+        title={`${sampleTotals.items} items`}
+        rightSlot={<IconButton icon="options-outline" accessibilityLabel="Sort and filter" />}
+      />
+
+      <InputField
+        icon="search-outline"
+        placeholder="Search your belongings"
+        value={query}
+        onChangeText={setQuery}
+        returnKeyType="search"
+        autoCorrect={false}
+        clearButtonMode="while-editing"
+      />
+
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.bleed}
+        contentContainerStyle={styles.chips}>
+        <Chip label="All" selected={filter === 'All'} onPress={() => setFilter('All')} />
+        {sampleCategories.map((entry) => (
+          <Chip
+            key={entry.category}
+            label={entry.category}
+            count={entry.count}
+            selected={filter === entry.category}
+            onPress={() => setFilter(entry.category)}
+          />
+        ))}
+      </ScrollView>
+
+      {visible.length === 0 ? (
+        <EmptyState
+          icon="search-outline"
+          title="Nothing here yet"
+          body="No items match this search or category. Add the item you're looking for and it will show up here."
+          actionLabel="Add item"
+          onAction={() => router.push('/add-item')}
+        />
+      ) : (
+        <View style={styles.list}>
+          <ThemedText type="label" themeColor="textTertiary" style={styles.count}>
+            {visible.length} shown
           </ThemedText>
-          <ThemedText type="subtitle" style={styles.title}>
-            {items.length} items
-          </ThemedText>
-
-          <View style={[styles.search, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <ThemedText type="small" themeColor="textSecondary">
-              🔍  Search your belongings
-            </ThemedText>
-          </View>
-
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.filterRow}>
-            {filters.map((filter) => {
-              const on = filter === active;
-              return (
-                <Pressable
-                  key={filter}
-                  onPress={() => setActive(filter)}
-                  style={[
-                    styles.filterChip,
-                    { borderColor: theme.border },
-                    on && { backgroundColor: theme.card_add_item, borderColor: theme.card_add_item },
-                  ]}>
-                  <ThemedText
-                    type="small"
-                    style={{ color: on ? theme.add_item_text : theme.textSecondary }}>
-                    {filter}
-                  </ThemedText>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-
-          <View style={styles.list}>
-            {visible.map((item) => (
-              <Pressable
-                key={item.name}
+          <Surface padding="none">
+            {visible.map((item, index) => (
+              <ListRow
+                key={item.id}
+                title={item.name}
+                subtitle={`${item.category} · ${item.price}`}
+                leading={<CategoryIcon category={item.category} icon={item.icon} />}
+                trailing={
+                  item.warranty && (
+                    <StatusPill label={item.warranty.label} tone={item.warranty.tone} />
+                  )
+                }
+                chevron
                 onPress={() => router.push('/item-detail')}
-                style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
-                <View style={[styles.thumb, { backgroundColor: theme.accentTint }]} />
-                <View style={styles.info}>
-                  <ThemedText type="smallBold">{item.name}</ThemedText>
-                  <ThemedText type="small" themeColor="textSecondary" style={styles.sub}>
-                    {item.category} · {item.price}
-                  </ThemedText>
-                </View>
-                {item.warranty && (
-                  <View style={[styles.pill, { backgroundColor: toneColor[item.warranty.tone].bg }]}>
-                    <ThemedText style={[styles.pillText, { color: toneColor[item.warranty.tone].text }]}>
-                      {item.warranty.label}
-                    </ThemedText>
-                  </View>
-                )}
-              </Pressable>
+                isLast={index === visible.length - 1}
+              />
             ))}
-          </View>
-        </ScrollView>
-      </SafeAreaView>
-    </ThemedView>
+          </Surface>
+        </View>
+      )}
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  bleed: {
+    marginHorizontal: -Layout.screenPadding,
+    marginTop: Spacing.lg,
   },
-  safeArea: {
-    flex: 1,
-  },
-  content: {
-    paddingHorizontal: 16,
-    paddingTop: 56,
-    paddingBottom: 40,
-  },
-  title: {
-    fontSize: 26,
-    marginTop: 2,
-    marginBottom: 16,
-  },
-  search: {
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 13,
-    marginBottom: 16,
-  },
-  filterRow: {
-    gap: 8,
-    paddingRight: 16,
-    marginBottom: 20,
-  },
-  filterChip: {
-    borderWidth: 1,
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+  chips: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    paddingHorizontal: Layout.screenPadding,
   },
   list: {
-    gap: 10,
+    marginTop: Spacing.xxl,
+    gap: Spacing.md,
   },
-  card: {
-    borderWidth: 1,
-    borderRadius: 14,
-    padding: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  thumb: {
-    width: 44,
-    height: 44,
-    borderRadius: 10,
-  },
-  info: {
-    flex: 1,
-    minWidth: 0,
-  },
-  sub: {
-    marginTop: 2,
-  },
-  pill: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 20,
-  },
-  pillText: {
-    fontSize: 11,
-    fontWeight: '700',
+  count: {
+    paddingHorizontal: Spacing.xs,
   },
 });

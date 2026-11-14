@@ -1,120 +1,155 @@
 import { router } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useState } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
+import { AppButton } from '@/components/ui/appButton';
+import { type Category } from '@/components/ui/categoryIcon';
+import { Chip } from '@/components/ui/chip';
+import { Icon } from '@/components/ui/icon';
 import { InputField } from '@/components/ui/inputField';
-import { PrimaryButton } from '@/components/ui/primaryButton';
+import { Screen } from '@/components/ui/screen';
+import { ScreenHeader } from '@/components/ui/screenHeader';
+import { sampleCategories } from '@/constants/sampleData';
+import { IconSize, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 export default function AddItem() {
-  // UI only — no saving yet. "Save item" just closes the screen.
+  // UI only — nothing is saved yet. "Save item" closes the sheet.
   const theme = useTheme();
+  const [name, setName] = useState('');
+  const [category, setCategory] = useState<Category>('Electronics');
+  const canSave = name.trim().length > 0;
 
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.content}
-          keyboardShouldPersistTaps="handled">
-          <View style={styles.header}>
-            <Pressable onPress={() => router.back()} hitSlop={8}>
-              <ThemedText type="small" themeColor="textSecondary">
-                Cancel
-              </ThemedText>
-            </Pressable>
-          </View>
+    <Screen
+      variant="modal"
+      avoidKeyboard
+      footer={<AppButton label="Save item" disabled={!canSave} onPress={() => router.back()} />}>
+      <ScreenHeader title="New item" backIcon="close" />
 
-          <ThemedText type="small" themeColor="textSecondary">
-            New item
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Add a photo"
+        style={({ pressed }) => [
+          styles.dropzone,
+          { borderColor: theme.borderStrong, backgroundColor: theme.cardMuted },
+          pressed && styles.pressed,
+        ]}>
+        <View style={[styles.dropIcon, { backgroundColor: theme.primaryTint }]}>
+          <Icon name="camera-outline" size={IconSize.xl} color={theme.primary} />
+        </View>
+        <ThemedText type="bodyMedium">Add a photo</ThemedText>
+        <ThemedText type="caption" themeColor="textSecondary">
+          A clear shot of the item or its receipt
+        </ThemedText>
+      </Pressable>
+
+      <View style={styles.captureRow}>
+        <AppButton label="Take photo" icon="camera-outline" variant="secondary" size="md" style={styles.captureButton} />
+        <AppButton label="Scan barcode" icon="barcode-outline" variant="secondary" size="md" style={styles.captureButton} />
+      </View>
+
+      <View style={styles.form}>
+        <InputField
+          label="Item name"
+          placeholder="e.g. Sony headphones"
+          value={name}
+          onChangeText={setName}
+          autoFocus
+        />
+
+        <View style={styles.field}>
+          <ThemedText type="smallBold" themeColor="textSecondary">
+            Category
           </ThemedText>
-          <ThemedText type="subtitle" style={styles.title}>
-            Add item
-          </ThemedText>
-
-          <View style={styles.captureRow}>
-            <Pressable style={[styles.capture, { backgroundColor: theme.card_add_item }]}>
-              <ThemedText type="small" style={{ color: theme.add_item_text, fontWeight: '700' }}>
-                📷  Take photo
-              </ThemedText>
-            </Pressable>
-            <Pressable style={[styles.capture, { backgroundColor: theme.card, borderColor: theme.border, borderWidth: 1 }]}>
-              <ThemedText type="small" style={{ fontWeight: '700' }}>
-                ⌗  Scan barcode
-              </ThemedText>
-            </Pressable>
+          <View style={styles.chips}>
+            {sampleCategories.map((entry) => (
+              <Chip
+                key={entry.category}
+                label={entry.category}
+                selected={category === entry.category}
+                onPress={() => setCategory(entry.category)}
+              />
+            ))}
           </View>
+        </View>
 
-          <View style={styles.form}>
-            <InputField label="Item name" placeholder="e.g. Sony headphones" />
-            <View style={styles.row}>
-              <View style={styles.rowField}>
-                <InputField label="Category" placeholder="Electronics" />
-              </View>
-              <View style={styles.rowField}>
-                <InputField label="Price" placeholder="$0.00" keyboardType="decimal-pad" />
-              </View>
-            </View>
-            <View style={styles.row}>
-              <View style={styles.rowField}>
-                <InputField label="Purchase date" placeholder="Select date" />
-              </View>
-              <View style={styles.rowField}>
-                <InputField label="Warranty" placeholder="1 year" />
-              </View>
-            </View>
-            <InputField label="Store (optional)" placeholder="e.g. Best Buy" />
-          </View>
+        <InputField label="Price" icon="cash-outline" placeholder="0.00" keyboardType="decimal-pad" />
 
-          <PrimaryButton label="Save item" onPress={() => router.back()} style={styles.save} />
-        </ScrollView>
-      </SafeAreaView>
-    </ThemedView>
+        <View style={styles.row}>
+          <InputField
+            label="Purchase date"
+            icon="calendar-outline"
+            placeholder="Select date"
+            containerStyle={styles.rowField}
+          />
+          <InputField
+            label="Warranty"
+            icon="shield-checkmark-outline"
+            placeholder="1 year"
+            containerStyle={styles.rowField}
+          />
+        </View>
+
+        <InputField
+          label="Store"
+          icon="storefront-outline"
+          placeholder="e.g. Best Buy"
+          hint="Optional"
+        />
+      </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  safeArea: { flex: 1 },
-  content: {
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 24,
+  dropzone: {
+    alignItems: 'center',
+    gap: Spacing.xs,
+    paddingVertical: Spacing.xxl,
+    paddingHorizontal: Spacing.lg,
+    borderRadius: Radius.lg,
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    marginTop: Spacing.md,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
-    paddingVertical: 8,
-  },
-  title: {
-    marginTop: 2,
-    marginBottom: 20,
+  dropIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: Radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.sm,
   },
   captureRow: {
     flexDirection: 'row',
-    gap: 12,
-    marginBottom: 22,
+    gap: Spacing.md,
+    marginTop: Spacing.md,
   },
-  capture: {
+  captureButton: {
     flex: 1,
-    height: 50,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   form: {
-    gap: 18,
+    gap: Spacing.xl,
+    marginTop: Spacing.xxxl,
+  },
+  field: {
+    gap: Spacing.sm,
+  },
+  chips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.sm,
   },
   row: {
     flexDirection: 'row',
-    gap: 12,
+    gap: Spacing.md,
   },
   rowField: {
     flex: 1,
   },
-  save: {
-    marginTop: 24,
+  pressed: {
+    opacity: 0.85,
   },
 });

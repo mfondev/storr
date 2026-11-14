@@ -1,210 +1,265 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Fragment } from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { AppButton } from '@/components/ui/appButton';
+import { CategoryIcon } from '@/components/ui/categoryIcon';
+import { Icon, type IconName } from '@/components/ui/icon';
+import { IconButton } from '@/components/ui/iconButton';
+import { ListRow } from '@/components/ui/listRow';
+import { ProgressBar } from '@/components/ui/progressBar';
+import { StatusPill } from '@/components/ui/statusPill';
+import { Surface } from '@/components/ui/surface';
+import { hasWarranty, sampleItems } from '@/constants/sampleData';
+import { Elevation, IconSize, Layout, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
-const info = [
-  { label: 'Purchased', value: 'Mar 14, 2025' },
-  { label: 'Price', value: '$2,399' },
-  { label: 'Store', value: 'Apple Store' },
-  { label: 'Location', value: 'Home office' },
+const ITEM = sampleItems.find(hasWarranty) ?? null;
+
+const FACTS: { label: string; value: string; icon: IconName }[] = [
+  { label: 'Purchased', value: 'Mar 14, 2025', icon: 'calendar-outline' },
+  { label: 'Price', value: '$2,399', icon: 'cash-outline' },
+  { label: 'Store', value: 'Apple Store', icon: 'storefront-outline' },
+  { label: 'Location', value: 'Home office', icon: 'location-outline' },
 ];
 
-const documents = [
+const DOCUMENTS = [
   { name: 'Receipt.pdf', size: '240 KB' },
   { name: 'AppleCare terms.pdf', size: '1.1 MB' },
 ];
 
 export default function ItemDetail() {
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
+
+  if (!ITEM) return null;
+  const { warranty } = ITEM;
+  const remaining = warranty.totalDays > 0 ? warranty.daysLeft / warranty.totalDays : 0;
 
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-          <View style={styles.header}>
-            <Pressable onPress={() => router.back()} hitSlop={8}>
-              <ThemedText type="small" themeColor="textSecondary">
-                ‹ Back
-              </ThemedText>
-            </Pressable>
+    <ThemedView style={styles.root}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: insets.bottom + Spacing.xxl }}>
+        <LinearGradient
+          colors={[theme.heroStart, theme.heroEnd]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.hero, { paddingTop: insets.top + Spacing.sm }]}>
+          <View style={[styles.orb, styles.orbA, { backgroundColor: theme.heroOverlay }]} />
+          <View style={[styles.orb, styles.orbB, { backgroundColor: theme.heroOverlay }]} />
+          <View style={styles.heroBar}>
+            <IconButton icon="chevron-back" accessibilityLabel="Go back" variant="onHero" onPress={() => router.back()} />
+            <IconButton icon="share-outline" accessibilityLabel="Share item" variant="onHero" />
           </View>
+          <View style={[styles.heroArt, { backgroundColor: theme.heroOverlay }]}>
+            <Icon name={ITEM.icon} size={56} color={theme.onPrimary} />
+          </View>
+        </LinearGradient>
 
-          <View style={[styles.photo, { backgroundColor: theme.accentTint }]} />
-          <ThemedText type="subtitle" style={styles.name}>
-            MacBook Pro 14"
-          </ThemedText>
-          <ThemedText type="small" themeColor="textSecondary" style={styles.category}>
-            Electronics
-          </ThemedText>
-
-          <View style={styles.grid}>
-            {info.map((row) => (
-              <View key={row.label} style={styles.gridItem}>
+        <View style={styles.content}>
+          <View style={styles.titleBlock}>
+            <View style={styles.titleText}>
+              <ThemedText type="title">{ITEM.name}</ThemedText>
+              <View style={styles.meta}>
+                <CategoryIcon category={ITEM.category} size={22} />
                 <ThemedText type="small" themeColor="textSecondary">
-                  {row.label}
-                </ThemedText>
-                <ThemedText type="smallBold" style={styles.gridValue}>
-                  {row.value}
-                </ThemedText>
-              </View>
-            ))}
-          </View>
-
-          <View style={[styles.warranty, { backgroundColor: theme.accentTint }]}>
-            <View>
-              <ThemedText type="smallBold" style={{ color: theme.accent }}>
-                AppleCare+
-              </ThemedText>
-              <ThemedText type="small" themeColor="textSecondary" style={styles.warrantySub}>
-                Expires in 214 days
-              </ThemedText>
-            </View>
-            <View style={[styles.pill, { backgroundColor: theme.card }]}>
-              <ThemedText style={[styles.pillText, { color: theme.accent }]}>Active</ThemedText>
-            </View>
-          </View>
-
-          <View style={[styles.divider, { backgroundColor: theme.border }]} />
-
-          <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionLabel}>
-            Documents
-          </ThemedText>
-          {documents.map((doc) => (
-            <View
-              key={doc.name}
-              style={[styles.docCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-              <View style={[styles.docThumb, { backgroundColor: theme.accentTint }]} />
-              <View style={styles.docInfo}>
-                <ThemedText type="smallBold">{doc.name}</ThemedText>
-                <ThemedText type="small" themeColor="textSecondary" style={styles.docSize}>
-                  {doc.size}
+                  {ITEM.category} · {ITEM.addedLabel.toLowerCase()}
                 </ThemedText>
               </View>
             </View>
-          ))}
+            <ThemedText type="subtitle">{ITEM.price}</ThemedText>
+          </View>
+
+          <Surface padding="none" style={styles.facts}>
+            <View style={styles.factsGrid}>
+              {FACTS.map((fact, index) => (
+                <Fragment key={fact.label}>
+                  <View
+                    style={[
+                      styles.fact,
+                      index % 2 === 0 && { borderRightWidth: StyleSheet.hairlineWidth, borderRightColor: theme.border },
+                      index < 2 && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: theme.border },
+                    ]}>
+                    <Icon name={fact.icon} size={IconSize.sm} color={theme.textTertiary} />
+                    <ThemedText type="caption" themeColor="textSecondary">
+                      {fact.label}
+                    </ThemedText>
+                    <ThemedText type="bodyMedium">{fact.value}</ThemedText>
+                  </View>
+                </Fragment>
+              ))}
+            </View>
+          </Surface>
+
+          <Surface variant="tinted" style={styles.coverage}>
+            <View style={styles.coverageTop}>
+              <View style={[styles.coverageIcon, { backgroundColor: theme.card }]}>
+                <Icon name="shield-checkmark-outline" size={IconSize.md} color={theme.primary} />
+              </View>
+              <View style={styles.coverageText}>
+                <ThemedText type="bodyMedium">{warranty.plan}</ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">
+                  {warranty.daysLeft} days of coverage left
+                </ThemedText>
+              </View>
+              <StatusPill label="Active" tone="success" dot />
+            </View>
+            <ProgressBar value={remaining} tone={warranty.tone} />
+          </Surface>
+
+          <View style={styles.section}>
+            <ThemedText type="label" themeColor="textTertiary" style={styles.sectionLabel}>
+              Documents
+            </ThemedText>
+            <Surface padding="none">
+              {DOCUMENTS.map((doc, index) => (
+                <ListRow
+                  key={doc.name}
+                  title={doc.name}
+                  subtitle={doc.size}
+                  leading={
+                    <View style={[styles.docIcon, { backgroundColor: theme.backgroundElement }]}>
+                      <Icon name="document-text-outline" size={IconSize.md} color={theme.textSecondary} />
+                    </View>
+                  }
+                  chevron
+                  isLast={index === DOCUMENTS.length - 1}
+                />
+              ))}
+            </Surface>
+          </View>
 
           <View style={styles.actions}>
-            <Pressable style={[styles.actionBtn, { borderColor: theme.border }]}>
-              <ThemedText type="small" style={styles.actionText}>
-                Edit
-              </ThemedText>
-            </Pressable>
-            <Pressable style={[styles.actionBtn, { borderColor: theme.border }]}>
-              <ThemedText type="small" style={styles.actionText}>
-                Set reminder
-              </ThemedText>
-            </Pressable>
+            <AppButton label="Edit" icon="create-outline" variant="secondary" style={styles.action} />
+            <AppButton label="Set reminder" icon="alarm-outline" style={styles.action} />
           </View>
-        </ScrollView>
-      </SafeAreaView>
+        </View>
+      </ScrollView>
     </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  safeArea: { flex: 1 },
-  content: {
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 24,
+  root: {
+    flex: 1,
   },
-  header: {
-    flexDirection: 'row',
-    paddingVertical: 8,
-    marginBottom: 4,
+  hero: {
+    alignItems: 'center',
+    paddingBottom: Spacing.xxxl,
+    borderBottomLeftRadius: Radius.xl,
+    borderBottomRightRadius: Radius.xl,
+    overflow: 'hidden',
+    ...Elevation.hero,
   },
-  photo: {
+  heroBar: {
     width: '100%',
-    aspectRatio: 16 / 11,
-    borderRadius: 16,
-    marginBottom: 16,
-  },
-  name: {
-    fontSize: 22,
-  },
-  category: {
-    marginTop: 4,
-    marginBottom: 18,
-  },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: 18,
-  },
-  gridItem: {
-    width: '50%',
-    gap: 3,
-    marginBottom: 14,
-  },
-  gridValue: {
-    fontSize: 14,
-  },
-  warranty: {
-    borderRadius: 14,
-    padding: 14,
+    maxWidth: Layout.maxContentWidth,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    paddingHorizontal: Layout.screenPadding,
+    marginBottom: Spacing.xl,
   },
-  warrantySub: {
-    marginTop: 2,
-  },
-  pill: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 20,
-  },
-  pillText: {
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  divider: {
-    height: 1,
-    marginVertical: 18,
-  },
-  sectionLabel: {
-    marginBottom: 10,
-  },
-  docCard: {
-    borderWidth: 1,
-    borderRadius: 14,
-    padding: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 10,
-  },
-  docThumb: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-  },
-  docInfo: {
-    flex: 1,
-    minWidth: 0,
-  },
-  docSize: {
-    marginTop: 2,
-  },
-  actions: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 8,
-  },
-  actionBtn: {
-    flex: 1,
-    height: 50,
-    borderRadius: 12,
-    borderWidth: 1,
+  heroArt: {
+    width: 128,
+    height: 128,
+    borderRadius: Radius.xl,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  actionText: {
-    fontWeight: '700',
+  orb: {
+    position: 'absolute',
+    borderRadius: Radius.pill,
+  },
+  orbA: {
+    width: 260,
+    height: 260,
+    top: -120,
+    right: -90,
+  },
+  orbB: {
+    width: 160,
+    height: 160,
+    bottom: -70,
+    left: -40,
+  },
+  content: {
+    width: '100%',
+    maxWidth: Layout.maxContentWidth,
+    alignSelf: 'center',
+    paddingHorizontal: Layout.screenPadding,
+    paddingTop: Spacing.xxl,
+    gap: Spacing.xl,
+  },
+  titleBlock: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: Spacing.lg,
+  },
+  titleText: {
+    flex: 1,
+    gap: Spacing.sm,
+  },
+  meta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  facts: {
+    marginTop: Spacing.xs,
+  },
+  factsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  fact: {
+    width: '50%',
+    padding: Spacing.lg,
+    gap: Spacing.xs,
+  },
+  coverage: {
+    gap: Spacing.lg,
+  },
+  coverageTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+  },
+  coverageIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: Radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  coverageText: {
+    flex: 1,
+    gap: Spacing.xxs,
+  },
+  section: {
+    gap: Spacing.sm,
+  },
+  sectionLabel: {
+    paddingHorizontal: Spacing.xs,
+  },
+  docIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: Radius.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actions: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+    marginTop: Spacing.sm,
+  },
+  action: {
+    flex: 1,
   },
 });
