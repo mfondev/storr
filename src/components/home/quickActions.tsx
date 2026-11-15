@@ -3,14 +3,23 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Icon, type IconName } from '@/components/ui/icon';
-import { IconSize, Radius, Spacing } from '@/constants/theme';
+import { Elevation, IconSize, Radius, Spacing, type ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
-const ACTIONS: { label: string; icon: IconName; href: Href; isPrimary?: boolean }[] = [
-  { label: 'Add item', icon: 'add', href: '/add-item', isPrimary: true },
-  { label: 'Scan', icon: 'scan-outline', href: '/add-item' },
-  { label: 'Warranties', icon: 'shield-checkmark-outline', href: '/warranties' },
-  { label: 'Activity', icon: 'time-outline', href: '/activity' },
+type QuickAction = {
+  label: string;
+  icon: IconName;
+  href: Href;
+  /** Badge background and icon colour — colour-codes each action. */
+  tint: ThemeColor;
+  fg: ThemeColor;
+};
+
+const ACTIONS: QuickAction[] = [
+  { label: 'Add item', icon: 'add', href: '/onboarding', tint: 'primary', fg: 'onPrimary' },
+  { label: 'Scan', icon: 'scan-outline', href: '/add-item', tint: 'primaryTint', fg: 'primary' },
+  { label: 'Warranty', icon: 'shield-checkmark', href: '/warranties', tint: 'amberTint', fg: 'amber' },
+  { label: 'Activity', icon: 'pulse', href: '/activity', tint: 'coralTint', fg: 'coral' },
 ];
 
 export default function QuickActions() {
@@ -25,19 +34,10 @@ export default function QuickActions() {
           accessibilityLabel={action.label}
           onPress={() => router.push(action.href)}
           style={({ pressed }) => [styles.action, pressed && styles.pressed]}>
-          <View
-            style={[
-              styles.tile,
-              { backgroundColor: action.isPrimary ? theme.primary : theme.card, borderColor: theme.border },
-              !action.isPrimary && styles.tileBordered,
-            ]}>
-            <Icon
-              name={action.icon}
-              size={IconSize.lg}
-              color={action.isPrimary ? theme.onPrimary : theme.primary}
-            />
+          <View style={[styles.badge, Elevation.soft, { backgroundColor: theme[action.tint] }]}>
+            <Icon name={action.icon} size={IconSize.lg} color={theme[action.fg]} />
           </View>
-          <ThemedText type="caption" themeColor="textSecondary" numberOfLines={1}>
+          <ThemedText type="smallBold" themeColor="textSecondary" numberOfLines={1}>
             {action.label}
           </ThemedText>
         </Pressable>
@@ -49,7 +49,7 @@ export default function QuickActions() {
 const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
-    gap: Spacing.sm,
+    gap: Spacing.md,
     marginTop: Spacing.xxl,
   },
   action: {
@@ -57,19 +57,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.sm,
   },
-  tile: {
+  badge: {
     width: '100%',
-    aspectRatio: 1.35,
-    maxHeight: 64,
-    borderRadius: Radius.md,
+    aspectRatio: 1,
+    maxHeight: 72,
+    borderRadius: Radius.lg,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  tileBordered: {
-    borderWidth: 1,
-  },
   pressed: {
-    opacity: 0.8,
-    transform: [{ scale: 0.97 }],
+    opacity: 0.9,
+    transform: [{ scale: 0.96 }],
   },
 });
