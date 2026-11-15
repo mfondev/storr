@@ -1,29 +1,27 @@
-import { Colors } from "@/constants/theme";
-import { NativeTabs } from "expo-router/unstable-native-tabs";
-import { DynamicColorIOS, useColorScheme } from "react-native";
+import { Colors } from '@/constants/theme';
+import { NativeTabs } from 'expo-router/unstable-native-tabs';
+import { DynamicColorIOS, useColorScheme } from 'react-native';
 
 export default function AppTabs() {
   const scheme = useColorScheme();
-  const colors = Colors[scheme === "unspecified" ? "light" : scheme];
+  const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
+
+  // The selected tab turns brand green; unselected icons sit in muted text colour.
+  const activeTint = DynamicColorIOS({
+    light: Colors.light.primary,
+    dark: Colors.dark.primary,
+  });
 
   return (
     <NativeTabs
       minimizeBehavior="onScrollDown"
-      labelStyle={{
-        color: DynamicColorIOS({
-          dark: "white",
-          light: colors.text,
-        }), fontSize: 10, fontWeight: "200"
-      }}
-      tintColor={DynamicColorIOS({
-        dark: "white",
-        light: colors.text,
-      })}
-    >
-      <NativeTabs.Trigger name="index" >
+      labelStyle={{ fontSize: 10, fontWeight: '500' }}
+      tintColor={activeTint}
+      iconColor={DynamicColorIOS({ light: colors.textSecondary, dark: colors.textSecondary })}>
+      <NativeTabs.Trigger name="index">
         <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
-          sf={{ default: "house", selected: "house.fill" }}
+          sf={{ default: 'house.circle', selected: 'house.circle.fill' }}
           renderingMode="template"
         />
       </NativeTabs.Trigger>
@@ -31,24 +29,23 @@ export default function AppTabs() {
       <NativeTabs.Trigger name="inventory">
         <NativeTabs.Trigger.Label>Inventory</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
-          sf={{ default: "briefcase", selected: "briefcase.fill" }}
+          sf={{ default: 'cube', selected: 'cube.fill' }}
           renderingMode="template"
         />
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="activity">
         <NativeTabs.Trigger.Label>Activity</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Badge hidden={false} />
         <NativeTabs.Trigger.Icon
-          sf={{ default: "calendar", selected: "calendar" }}
+          sf={{ default: 'bell', selected: 'bell.fill' }}
           renderingMode="template"
         />
       </NativeTabs.Trigger>
 
-      <NativeTabs.Trigger name="profile" >
+      <NativeTabs.Trigger name="profile">
         <NativeTabs.Trigger.Label>Profile</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
-          sf={{ default: "person", selected: "person.fill" }}
+          sf={{ default: 'person.crop.circle', selected: 'person.crop.circle.fill' }}
           renderingMode="template"
         />
       </NativeTabs.Trigger>

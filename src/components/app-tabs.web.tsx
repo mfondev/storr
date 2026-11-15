@@ -24,16 +24,16 @@ export default function AppTabs() {
       <TabList asChild>
         <CustomTabList>
           <TabTrigger name="home" href="/" asChild>
-            <TabButton icon="home-outline">Home</TabButton>
+            <TabButton icon="home">Home</TabButton>
           </TabTrigger>
           <TabTrigger name="inventory" href="/inventory" asChild>
-            <TabButton icon="cube-outline">Inventory</TabButton>
+            <TabButton icon="cube">Inventory</TabButton>
           </TabTrigger>
           <TabTrigger name="activity" href="/activity" asChild>
-            <TabButton icon="time-outline">Activity</TabButton>
+            <TabButton icon="notifications">Activity</TabButton>
           </TabTrigger>
           <TabTrigger name="profile" href="/profile" asChild>
-            <TabButton icon="person-outline">Profile</TabButton>
+            <TabButton icon="person-circle">Profile</TabButton>
           </TabTrigger>
         </CustomTabList>
       </TabList>
@@ -50,6 +50,8 @@ export function TabButton({
 }: TabTriggerSlotProps & { icon: IconName }) {
   const theme = useTheme();
   const color = isFocused ? theme.primary : theme.textSecondary;
+  // Filled icon when selected, its outline variant otherwise.
+  const iconName = (isFocused ? icon : `${icon}-outline`) as IconName;
 
   return (
     <Pressable
@@ -61,7 +63,7 @@ export function TabButton({
         isFocused && { backgroundColor: theme.backgroundSelected },
         pressed && styles.pressed,
       ]}>
-      <Icon name={icon} size={IconSize.sm} color={color} />
+      <Icon name={iconName} size={IconSize.sm} color={color} />
       <ThemedText type="smallBold" style={{ color }}>
         {children}
       </ThemedText>
