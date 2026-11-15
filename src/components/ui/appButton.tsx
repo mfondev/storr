@@ -48,6 +48,8 @@ export function AppButton({
     ghost: { fg: theme.primary },
     destructive: { bg: theme.coralTint, fg: theme.coral },
   };
+  // Keep the button's colour when disabled and stay fully opaque, so it never
+  // looks see-through over a blurred footer (we don't lower opacity).
   const colors = palette[variant];
 
   return (
@@ -63,7 +65,6 @@ export function AppButton({
         { backgroundColor: colors.bg, borderColor: colors.border },
         colors.border !== undefined && styles.bordered,
         pressed && styles.pressed,
-        isDisabled && styles.disabled,
         style,
       ]}>
       {loading ? (
@@ -125,8 +126,5 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.88,
     transform: [{ scale: 0.985 }],
-  },
-  disabled: {
-    opacity: 0.45,
   },
 });
