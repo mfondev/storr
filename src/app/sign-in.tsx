@@ -1,7 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-
 import { ThemedText } from '@/components/themed-text';
 import { AppButton } from '@/components/ui/appButton';
 import { BrandMark } from '@/components/ui/brandMark';
@@ -10,11 +9,42 @@ import { InputField } from '@/components/ui/inputField';
 import { Screen } from '@/components/ui/screen';
 import { IconSize, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { loginUser, save } from '@/utils/auth';
+
 
 export default function SignIn() {
-  // UI only — no auth yet. The primary button navigates as a placeholder.
   const theme = useTheme();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const handleLogin = async () => {
+    setErrorMessage(null);
+
+    // Basic guard so we don't hit the API with empty fields.
+    if (!email.trim() || !password) {
+      setErrorMessage('Enter your email and password.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      // Send the form data in the shape the backend expects (LoginInput).
+      const result = await loginUser({ email: email.trim(), password });
+      // Persist the token so the app can tell you're logged in on next open.
+      await save('token', result.data.token);
+      // Replace (not push) so Back doesn't return to the login screen.
+      router.replace('/(tabs)');
+    } catch (error) {
+      // loginUser throws an Error with the backend's message.
+      setErrorMessage(error instanceof Error ? error.message : 'Something went wrong.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
 
   return (
     <Screen variant="stack" avoidKeyboard>
@@ -37,6 +67,9 @@ export default function SignIn() {
           autoCapitalize="none"
           autoComplete="email"
           textContentType="emailAddress"
+          value={email}
+          onChangeText={setEmail}
+          editable={!isSubmitting}
         />
         <InputField
           label="Password"
@@ -45,6 +78,11 @@ export default function SignIn() {
           secureTextEntry={!isPasswordVisible}
           autoComplete="password"
           textContentType="password"
+          value={password}
+          onChangeText={setPassword}
+          editable={!isSubmitting}
+          returnKeyType="go"
+          onSubmitEditing={handleLogin}
           rightSlot={
             <Pressable
               accessibilityRole="button"
@@ -61,7 +99,19 @@ export default function SignIn() {
         />
       </View>
 
-      <AppButton label="Sign in" onPress={() => router.replace('/')} style={styles.submit} />
+      {errorMessage && (
+        <ThemedText type="small" themeColor="coral" style={styles.error}>
+          {errorMessage}
+        </ThemedText>
+      )}
+
+      <AppButton
+        label="Sign in"
+        onPress={handleLogin}
+        loading={isSubmitting}
+        disabled={isSubmitting}
+        style={[styles.submit, errorMessage ? styles.submitTight : null]}
+      />
 
       <Pressable
         accessibilityRole="button"
@@ -89,8 +139,15 @@ const styles = StyleSheet.create({
   form: {
     gap: Spacing.xl,
   },
+  error: {
+    marginTop: Spacing.xxxl,
+    textAlign: 'center',
+  },
   submit: {
     marginTop: Spacing.xxxl,
+  },
+  submitTight: {
+    marginTop: Spacing.lg,
   },
   switchRow: {
     flexDirection: 'row',

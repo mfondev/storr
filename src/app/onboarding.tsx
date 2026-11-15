@@ -125,21 +125,11 @@ export default function Onboarding() {
             ))}
           </View>
           <AppButton
-            label={isLast ? 'Get started' : 'Continue'}
+            label="Get started"
             icon="arrow-forward"
             iconPosition="right"
             onPress={onContinue}
           />
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => router.push('/sign-in')}
-            hitSlop={8}
-            style={styles.signIn}>
-            <ThemedText type="small" themeColor="textSecondary">
-              Already have an account?{' '}
-            </ThemedText>
-            <ThemedText type="linkPrimary">Sign in</ThemedText>
-          </Pressable>
         </View>
       </SafeAreaView>
     </ThemedView>
@@ -200,10 +190,5 @@ const styles = StyleSheet.create({
   },
   dotActive: {
     width: 22,
-  },
-  signIn: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
   },
 });
