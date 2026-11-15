@@ -1,6 +1,7 @@
 /**
- * Hardcoded sample content for the UI. The app does not call the backend yet;
- * every screen reads from here so the data story stays consistent across screens.
+ * Starting content for a fresh account: no items yet, so totals are all zero.
+ * Totals are derived from the items array (not hardcoded), so they grow once
+ * real items exist. Wire these arrays to the backend later.
  */
 
 import type { Category } from '@/components/ui/categoryIcon';
@@ -31,80 +32,29 @@ export function hasWarranty(item: SampleItem): item is CoveredItem {
   return item.warranty !== undefined;
 }
 
-export const sampleUser = {
-  name: 'Gideon Atauba',
-  email: 'gideon@storr.app',
-} as const;
+/** No items yet — a brand-new account starts empty. */
+export const sampleItems: SampleItem[] = [];
 
-export const sampleTotals = {
-  value: '$18,420',
-  items: 124,
-  covered: 98,
-  expiringSoon: 3,
-} as const;
+/** Parse a display price like "$2,399" into a number; 0 when unparseable. */
+function parsePrice(price: string): number {
+  const amount = Number(price.replace(/[^0-9.]/g, ''));
+  return Number.isFinite(amount) ? amount : 0;
+}
 
-export const sampleItems: SampleItem[] = [
-  {
-    id: 'macbook',
-    name: 'MacBook Pro 14"',
-    category: 'Electronics',
-    icon: 'laptop-outline',
-    price: '$2,399',
-    addedLabel: 'Added 2 hours ago',
-    warranty: { plan: 'AppleCare+', label: 'Covered', tone: 'success', daysLeft: 214, totalDays: 365 },
-  },
-  {
-    id: 'sony-xm6',
-    name: 'Sony WH-1000XM6',
-    category: 'Electronics',
-    icon: 'headset-outline',
-    price: '$399',
-    addedLabel: 'Added yesterday',
-    warranty: { plan: 'Manufacturer warranty', label: '7 days left', tone: 'warning', daysLeft: 7, totalDays: 365 },
-  },
-  {
-    id: 'dyson',
-    name: 'Dyson V15',
-    category: 'Home',
-    icon: 'flash-outline',
-    price: '$649',
-    addedLabel: 'Added 3 days ago',
-    warranty: { plan: 'Manufacturer warranty', label: 'Covered', tone: 'success', daysLeft: 340, totalDays: 730 },
-  },
-  {
-    id: 'bravia',
-    name: 'Sony Bravia TV',
-    category: 'Home',
-    icon: 'tv-outline',
-    price: '$1,199',
-    addedLabel: 'Added 2 weeks ago',
-    warranty: { plan: 'Extended plan', label: '24 days left', tone: 'warning', daysLeft: 24, totalDays: 730 },
-  },
-  {
-    id: 'desk',
-    name: 'Standing desk',
-    category: 'Work',
-    icon: 'desktop-outline',
-    price: '$410',
-    addedLabel: 'Added last week',
-    warranty: { plan: 'Manufacturer warranty', label: 'Expired', tone: 'danger', daysLeft: 0, totalDays: 365 },
-  },
-  {
-    id: 'canon',
-    name: 'Canon EOS R6',
-    category: 'Electronics',
-    icon: 'camera-outline',
-    price: '$2,499',
-    addedLabel: 'Added 3 days ago',
-  },
-];
+/** Totals derived from the items — all zero while there are none. */
+export function computeTotals(items: SampleItem[]) {
+  const value = items.reduce((sum, item) => sum + parsePrice(item.price), 0);
+  return {
+    value: `$${value.toLocaleString()}`,
+    items: items.length,
+    covered: items.filter(hasWarranty).length,
+    expiringSoon: items.filter((item) => item.warranty?.tone === 'warning').length,
+  };
+}
 
-export const sampleCategories: { category: Category; count: number }[] = [
-  { category: 'Electronics', count: 42 },
-  { category: 'Home', count: 31 },
-  { category: 'Work', count: 18 },
-  { category: 'Other', count: 33 },
-];
+export const sampleTotals = computeTotals(sampleItems);
+
+export const sampleCategories: { category: Category; count: number }[] = [];
 
 export type ActivityEntry = {
   id: string;
@@ -116,25 +66,4 @@ export type ActivityEntry = {
 
 export type ActivityGroup = { label: string; entries: ActivityEntry[] };
 
-export const sampleActivity: ActivityGroup[] = [
-  {
-    label: 'Today',
-    entries: [
-      { id: 'a1', title: 'Added MacBook Pro 14"', detail: '2 hours ago', icon: 'add-circle-outline', tone: 'success' },
-      { id: 'a2', title: 'Reminder scheduled', detail: '5 hours ago · Sony WH-1000XM6', icon: 'alarm-outline', tone: 'warning' },
-    ],
-  },
-  {
-    label: 'Yesterday',
-    entries: [
-      { id: 'a3', title: 'Receipt added', detail: 'Canon EOS R6', icon: 'receipt-outline', tone: 'neutral' },
-      { id: 'a4', title: 'Item updated', detail: 'Standing desk · location changed', icon: 'create-outline', tone: 'neutral' },
-    ],
-  },
-  {
-    label: '3 days ago',
-    entries: [
-      { id: 'a5', title: 'Dyson V15 marked as covered', detail: 'Manufacturer warranty linked', icon: 'shield-checkmark-outline', tone: 'success' },
-    ],
-  },
-];
+export const sampleActivity: ActivityGroup[] = [];

@@ -66,9 +66,13 @@ export default function Inventory() {
 
       {visible.length === 0 ? (
         <EmptyState
-          icon="search-outline"
-          title="Nothing here yet"
-          body="No items match this search or category. Add the item you're looking for and it will show up here."
+          icon={sampleItems.length === 0 ? 'cube-outline' : 'search-outline'}
+          title={sampleItems.length === 0 ? 'No items yet' : 'Nothing matches'}
+          body={
+            sampleItems.length === 0
+              ? 'Add your first item to start building your inventory — its price, warranty and details live here.'
+              : 'No items match this search or category. Try a different term.'
+          }
           actionLabel="Add item"
           onAction={() => router.push('/add-item')}
         />

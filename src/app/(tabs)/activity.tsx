@@ -1,6 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
+import { EmptyState } from '@/components/ui/emptyState';
 import { Icon } from '@/components/ui/icon';
 import { Screen } from '@/components/ui/screen';
 import { PageTitle } from '@/components/ui/screenHeader';
@@ -22,6 +23,14 @@ export default function Activity() {
   return (
     <Screen variant="tab">
       <PageTitle eyebrow="Log" title="Activity" />
+
+      {sampleActivity.length === 0 && (
+        <EmptyState
+          icon="pulse-outline"
+          title="No activity yet"
+          body="Your recent actions — adding items, warranty reminders, updates — will appear here."
+        />
+      )}
 
       {sampleActivity.map((group) => (
         <View key={group.label} style={styles.group}>

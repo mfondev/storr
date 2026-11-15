@@ -9,8 +9,9 @@ import { ListRow } from '@/components/ui/listRow';
 import { Screen } from '@/components/ui/screen';
 import { StatusPill } from '@/components/ui/statusPill';
 import { Surface } from '@/components/ui/surface';
-import { sampleTotals, sampleUser } from '@/constants/sampleData';
+import { sampleTotals } from '@/constants/sampleData';
 import { IconSize, Radius, Spacing } from '@/constants/theme';
+import { displayNameOf, useAuth } from '@/hooks/use-auth';
 import { useTheme } from '@/hooks/use-theme';
 
 type Row = {
@@ -30,14 +31,14 @@ const SECTIONS: Section[] = [
       { label: 'Notifications', icon: 'notifications-outline', value: 'On' },
       { label: 'Appearance', icon: 'moon-outline', value: 'System' },
       { label: 'Currency', icon: 'cash-outline', value: 'USD' },
-      { label: 'Categories', icon: 'pricetags-outline', value: '4 custom' },
+      { label: 'Categories', icon: 'pricetags-outline' },
     ],
   },
   {
     label: 'Data',
     rows: [
-      { label: 'Storage', icon: 'server-outline', value: '1.2 GB used' },
-      { label: 'Backup & sync', icon: 'cloud-done-outline', pill: 'Synced' },
+      { label: 'Storage', icon: 'server-outline', value: '0 GB used' },
+      { label: 'Backup & sync', icon: 'cloud-outline' },
     ],
   },
   {
@@ -59,15 +60,17 @@ const STATS = [
 
 export default function Profile() {
   const theme = useTheme();
+  const { user, signOut } = useAuth();
+  const name = displayNameOf(user);
 
   return (
     <Screen variant="tab">
       <View style={styles.identity}>
-        <Avatar name={sampleUser.name} size={76} />
+        <Avatar name={name || '?'} size={76} />
         <View style={styles.identityText}>
-          <ThemedText type="subtitle">{sampleUser.name}</ThemedText>
+          <ThemedText type="subtitle">{name || 'Your account'}</ThemedText>
           <ThemedText type="small" themeColor="textSecondary">
-            {sampleUser.email}
+            {user?.email ?? ''}
           </ThemedText>
         </View>
       </View>
@@ -120,7 +123,7 @@ export default function Profile() {
         label="Sign out"
         icon="log-out-outline"
         variant="destructive"
-        onPress={() => router.replace('/sign-in')}
+        onPress={signOut}
         style={styles.signOut}
       />
       <ThemedText type="caption" themeColor="textTertiary" style={styles.version}>
