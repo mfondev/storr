@@ -16,7 +16,7 @@ type QuickAction = {
 };
 
 const ACTIONS: QuickAction[] = [
-  { label: 'Add item', icon: 'add', href: '/onboarding', tint: 'primary', fg: 'onPrimary' },
+  { label: 'Add item', icon: 'add', href: '/add-item', tint: 'primary', fg: 'onPrimary' },
   { label: 'Scan', icon: 'scan-outline', href: '/add-item', tint: 'primaryTint', fg: 'primary' },
   { label: 'Warranty', icon: 'shield-checkmark', href: '/warranties', tint: 'amberTint', fg: 'amber' },
   { label: 'Activity', icon: 'pulse', href: '/activity', tint: 'coralTint', fg: 'coral' },
