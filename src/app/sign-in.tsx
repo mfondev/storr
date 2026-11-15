@@ -8,12 +8,14 @@ import { Icon } from '@/components/ui/icon';
 import { InputField } from '@/components/ui/inputField';
 import { Screen } from '@/components/ui/screen';
 import { IconSize, Spacing } from '@/constants/theme';
+import { useAuth } from '@/hooks/use-auth';
 import { useTheme } from '@/hooks/use-theme';
-import { loginUser, save } from '@/utils/auth';
+import { loginUser } from '@/utils/auth';
 
 
 export default function SignIn() {
   const theme = useTheme();
+  const { signIn } = useAuth();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -33,10 +35,9 @@ export default function SignIn() {
     try {
       // Send the form data in the shape the backend expects (LoginInput).
       const result = await loginUser({ email: email.trim(), password });
-      // Persist the token so the app can tell you're logged in on next open.
-      await save('token', result.data.token);
-      // Replace (not push) so Back doesn't return to the login screen.
-      router.replace('/(tabs)');
+      // Save the token + user and flip auth state — the protected route then
+      // redirects into the app automatically (no manual navigation needed).
+      await signIn(result.data.token, result.data.user);
     } catch (error) {
       // loginUser throws an Error with the backend's message.
       setErrorMessage(error instanceof Error ? error.message : 'Something went wrong.');
@@ -44,7 +45,6 @@ export default function SignIn() {
       setIsSubmitting(false);
     }
   };
-
 
   return (
     <Screen variant="stack" avoidKeyboard>

@@ -66,7 +66,7 @@ export default function SignUp() {
         <View style={styles.nameRow}>
           <InputField
             label="First name"
-            placeholder="Gideon"
+            placeholder="First Name"
             autoComplete="given-name"
             containerStyle={styles.nameField}
             value={firstName}
@@ -75,7 +75,7 @@ export default function SignUp() {
           />
           <InputField
             label="Last name"
-            placeholder="Atauba"
+            placeholder="Last Name"
             autoComplete="family-name"
             containerStyle={styles.nameField}
             value={lastName}
@@ -146,7 +146,7 @@ export default function SignUp() {
 
       <Pressable
         accessibilityRole="button"
-        onPress={handleRegister}
+        onPress={() => {router.push("/sign-in")}}
         hitSlop={8}
         style={styles.switchRow}
       >
