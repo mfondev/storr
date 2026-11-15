@@ -31,7 +31,14 @@ export function EmptyState({ icon, title, body, actionLabel, onAction }: EmptySt
         {body}
       </ThemedText>
       {actionLabel && (
-        <AppButton label={actionLabel} onPress={onAction} variant="secondary" size="md" fullWidth={false} />
+        <AppButton
+          label={actionLabel}
+          onPress={onAction}
+          variant="secondary"
+          size="md"
+          fullWidth={false}
+          style={styles.action}
+        />
       )}
     </View>
   );
@@ -65,5 +72,8 @@ const styles = StyleSheet.create({
   body: {
     maxWidth: 280,
     marginBottom: Spacing.sm,
+  },
+  action: {
+    alignSelf: 'center',
   },
 });
