@@ -18,55 +18,63 @@ export default function HeroCard() {
   const theme = useTheme();
 
   return (
-    <LinearGradient
-      colors={[theme.heroStart, theme.heroEnd]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={[styles.card, Elevation.hero]}>
-      <View style={[styles.orb, styles.orbLarge, { backgroundColor: theme.heroOverlay }]} />
-      <View style={[styles.orb, styles.orbSmall, { backgroundColor: theme.heroOverlay }]} />
+    // The outer View owns the corners: a native gradient view doesn't reliably clip its own.
+    <View style={[styles.card, Elevation.hero]}>
+      <LinearGradient
+        colors={[theme.heroStart, theme.heroEnd]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.gradient}>
+        <View style={[styles.orb, styles.orbLarge, { backgroundColor: theme.heroOverlay }]} />
+        <View style={[styles.orb, styles.orbSmall, { backgroundColor: theme.heroOverlay }]} />
 
-      <View style={styles.top}>
-        <ThemedText type="label" style={{ color: theme.heroMuted }}>
-          Total value
-        </ThemedText>
-        <View style={[styles.trend, { backgroundColor: theme.heroOverlay }]}>
-          <Icon name="trending-up-outline" size={IconSize.sm} color={theme.onPrimary} />
-          <ThemedText type="smallBold" style={{ color: theme.onPrimary }}>
-            +4.2% this month
+        <View style={styles.top}>
+          <ThemedText type="label" style={{ color: theme.heroMuted }}>
+            Total value
           </ThemedText>
+          <View style={[styles.trend, { backgroundColor: theme.heroOverlay }]}>
+            <Icon name="trending-up-outline" size={IconSize.sm} color={theme.onPrimary} />
+            <ThemedText type="smallBold" style={{ color: theme.onPrimary }}>
+              +4.2% this month
+            </ThemedText>
+          </View>
         </View>
-      </View>
 
-      <ThemedText type="display" style={{ color: theme.onPrimary }}>
-        {sampleTotals.value}
-      </ThemedText>
+        <ThemedText type="display" style={{ color: theme.onPrimary }}>
+          {sampleTotals.value}
+        </ThemedText>
 
-      <View style={styles.stats}>
-        {STATS.map((stat, index) => (
-          <Fragment key={stat.label}>
-            {index > 0 && <View style={[styles.divider, { backgroundColor: theme.heroOverlay }]} />}
-            <View style={styles.stat}>
-              <ThemedText type="heading" style={{ color: theme.onPrimary }}>
-                {stat.value}
-              </ThemedText>
-              <ThemedText type="caption" style={{ color: theme.heroMuted }}>
-                {stat.label}
-              </ThemedText>
-            </View>
-          </Fragment>
-        ))}
-      </View>
-    </LinearGradient>
+        <View style={styles.stats}>
+          {STATS.map((stat, index) => (
+            <Fragment key={stat.label}>
+              {index > 0 && (
+                <View style={[styles.divider, { backgroundColor: theme.heroOverlay }]} />
+              )}
+              <View style={styles.stat}>
+                <ThemedText type="heading" style={{ color: theme.onPrimary }}>
+                  {stat.value}
+                </ThemedText>
+                <ThemedText type="caption" style={{ color: theme.heroMuted }}>
+                  {stat.label}
+                </ThemedText>
+              </View>
+            </Fragment>
+          ))}
+        </View>
+      </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: Radius.xl,
-    padding: Spacing.xxl,
-    gap: Spacing.lg,
+    borderRadius: Radius.md,
+  },
+  gradient: {
+    borderRadius: Radius.md,
     overflow: 'hidden',
+    padding: Spacing.xl,
+    gap: Spacing.lg,
   },
   orb: {
     position: 'absolute',
