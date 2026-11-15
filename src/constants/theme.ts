@@ -85,6 +85,10 @@ export const Fonts = {
   display: 'PlusJakartaSans_700Bold',
   displayBold: 'PlusJakartaSans_800ExtraBold',
   displayMedium: 'PlusJakartaSans_600SemiBold',
+  /** Expressive display for hero moments (onboarding, big welcome headlines). */
+  hero: 'BricolageGrotesque_800ExtraBold',
+  heroBold: 'BricolageGrotesque_700Bold',
+  heroMedium: 'BricolageGrotesque_600SemiBold',
   body: 'Inter_400Regular',
   bodyMedium: 'Inter_500Medium',
   bodySemiBold: 'Inter_600SemiBold',
@@ -125,6 +129,12 @@ export const Elevation = {
   soft: { boxShadow: '0 6px 20px rgba(20, 26, 23, 0.06)' },
   raised: { boxShadow: '0 12px 32px rgba(20, 26, 23, 0.12)' },
   hero: { boxShadow: '0 18px 40px rgba(15, 53, 39, 0.28)' },
+} as const;
+
+/** Alpha-only stops for gradient masks. The hue is irrelevant; only the opacity is read. */
+export const Mask = {
+  opaque: 'rgba(0, 0, 0, 1)',
+  transparent: 'rgba(0, 0, 0, 0)',
 } as const;
 
 export const Layout = {

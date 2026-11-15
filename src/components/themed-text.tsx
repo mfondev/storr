@@ -4,6 +4,7 @@ import { Fonts, type ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 export type ThemedTextType =
+  | 'hero'
   | 'display'
   | 'title'
   | 'subtitle'
@@ -36,6 +37,12 @@ export function ThemedText({ style, type = 'default', themeColor, ...rest }: The
  * `fontFamily` only — never `fontWeight` — or Android will synthesise a bold.
  */
 const styles = StyleSheet.create({
+  hero: {
+    fontFamily: Fonts.hero,
+    fontSize: 44,
+    lineHeight: 48,
+    letterSpacing: -1.6,
+  },
   display: {
     fontFamily: Fonts.displayBold,
     fontSize: 40,
