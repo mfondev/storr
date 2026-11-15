@@ -17,11 +17,13 @@ import { useColorScheme } from 'react-native';
 
 import { BrandSplash } from '@/components/brandSplash';
 import { Colors } from '@/constants/theme';
+import { AuthProvider, useAuth } from '@/hooks/use-auth';
 
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
+function RootNavigator() {
   const colorScheme = useColorScheme();
+  const { isLoggedIn } = useAuth();
   const [fontsLoaded, fontError] = useFonts({
     Inter_400Regular,
     Inter_500Medium,
@@ -33,7 +35,8 @@ export default function RootLayout() {
     BricolageGrotesque_700Bold,
     BricolageGrotesque_800ExtraBold,
   });
-  const isReady = fontsLoaded || fontError !== null;
+  // Hold the splash until fonts AND the token check are both done (isLoggedIn !== null).
+  const isReady = (fontsLoaded || fontError !== null) && isLoggedIn !== null;
 
   const isDark = colorScheme === 'dark';
   const palette = Colors[isDark ? 'dark' : 'light'];
@@ -59,14 +62,29 @@ export default function RootLayout() {
           headerShown: false,
           contentStyle: { backgroundColor: palette.background },
         }}>
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="onboarding" />
-        <Stack.Screen name="sign-in" />
-        <Stack.Screen name="sign-up" />
-        <Stack.Screen name="add-item" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="item-detail" />
-        <Stack.Screen name="warranties" />
+        {/* Signed in: the app. Available only once a token is present. */}
+        <Stack.Protected guard={isLoggedIn === true}>
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="add-item" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="item-detail" />
+          <Stack.Screen name="warranties" />
+        </Stack.Protected>
+
+        {/* Signed out (or still checking): onboarding + auth. */}
+        <Stack.Protected guard={isLoggedIn !== true}>
+          <Stack.Screen name="onboarding" />
+          <Stack.Screen name="sign-in" />
+          <Stack.Screen name="sign-up" />
+        </Stack.Protected>
       </Stack>
     </ThemeProvider>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <AuthProvider>
+      <RootNavigator />
+    </AuthProvider>
   );
 }

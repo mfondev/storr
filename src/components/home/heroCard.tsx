@@ -32,12 +32,14 @@ export default function HeroCard() {
           <ThemedText type="label" style={{ color: theme.heroMuted }}>
             Total value
           </ThemedText>
-          <View style={[styles.trend, { backgroundColor: theme.heroOverlay }]}>
-            <Icon name="trending-up-outline" size={IconSize.sm} color={theme.onPrimary} />
-            <ThemedText type="smallBold" style={{ color: theme.onPrimary }}>
-              +4.2% this month
-            </ThemedText>
-          </View>
+          {sampleTotals.items > 0 && (
+            <View style={[styles.trend, { backgroundColor: theme.heroOverlay }]}>
+              <Icon name="trending-up-outline" size={IconSize.sm} color={theme.onPrimary} />
+              <ThemedText type="smallBold" style={{ color: theme.onPrimary }}>
+                +4.2% this month
+              </ThemedText>
+            </View>
+          )}
         </View>
 
         <ThemedText type="display" style={{ color: theme.onPrimary }}>
