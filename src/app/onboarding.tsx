@@ -1,4 +1,3 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useRef, useState } from 'react';
 import {
@@ -16,24 +15,42 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { AppButton } from '@/components/ui/appButton';
 import { Icon, type IconName } from '@/components/ui/icon';
-import { Elevation, Layout, Radius, Spacing } from '@/constants/theme';
+import { IconSize, Layout, Radius, Spacing, type ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
-const SLIDES: { icon: IconName; title: string; body: string }[] = [
+type Slide = {
+  icon: IconName;
+  eyebrow: string;
+  title: string;
+  body: string;
+  tint: ThemeColor;
+  fg: ThemeColor;
+};
+
+const SLIDES: Slide[] = [
   {
-    icon: 'camera-outline',
-    title: 'Track what you own, without the spreadsheet',
-    body: 'Photograph an item once and storr keeps the receipt, the warranty and the details together, so you can find any of it in seconds.',
+    icon: 'sparkles',
+    eyebrow: 'Welcome to storr',
+    title: 'Track what you own.',
+    body: 'Snap an item once — storr keeps the receipt, warranty and details together, ready in seconds.',
+    tint: 'primaryTint',
+    fg: 'primary',
   },
   {
-    icon: 'shield-checkmark-outline',
-    title: 'Never miss a warranty again',
-    body: 'storr reminds you before coverage lapses, so you can claim repairs and replacements while they are still free.',
+    icon: 'shield-checkmark',
+    eyebrow: 'Stay covered',
+    title: 'Never miss a warranty.',
+    body: 'Get a nudge before coverage lapses, so repairs and replacements stay free.',
+    tint: 'amberTint',
+    fg: 'amber',
   },
   {
-    icon: 'layers-outline',
-    title: 'Everything in one place',
-    body: 'Receipts, prices, purchase dates and documents for every item you own, organised and searchable.',
+    icon: 'albums',
+    eyebrow: 'All in one place',
+    title: 'Everything, organised.',
+    body: 'Receipts, prices, dates and documents for every item — searchable and always to hand.',
+    tint: 'coralTint',
+    fg: 'coral',
   },
 ];
 
@@ -79,22 +96,14 @@ export default function Onboarding() {
           {SLIDES.map((slide) => (
             <View key={slide.title} style={[styles.slide, { width }]}>
               <View style={styles.slideInner}>
-                <LinearGradient
-                  colors={[theme.heroStart, theme.heroEnd]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={[styles.art, Elevation.hero]}>
-                  <View style={[styles.orb, styles.orbA, { backgroundColor: theme.heroOverlay }]} />
-                  <View style={[styles.orb, styles.orbB, { backgroundColor: theme.heroOverlay }]} />
-                  <View style={[styles.glyph, { backgroundColor: theme.heroOverlay }]}>
-                    <Icon name={slide.icon} size={44} color={theme.onPrimary} />
-                  </View>
-                </LinearGradient>
-
-                <ThemedText type="title" style={styles.title}>
-                  {slide.title}
+                <View style={[styles.chip, { backgroundColor: theme[slide.tint] }]}>
+                  <Icon name={slide.icon} size={IconSize.xl} color={theme[slide.fg]} />
+                </View>
+                <ThemedText type="label" style={{ color: theme[slide.fg] }}>
+                  {slide.eyebrow}
                 </ThemedText>
-                <ThemedText type="default" themeColor="textSecondary">
+                <ThemedText type="hero">{slide.title}</ThemedText>
+                <ThemedText type="subtitle" themeColor="textSecondary" style={styles.body}>
                   {slide.body}
                 </ThemedText>
               </View>
@@ -117,7 +126,7 @@ export default function Onboarding() {
           </View>
           <AppButton
             label={isLast ? 'Get started' : 'Continue'}
-            icon={isLast ? 'arrow-forward' : undefined}
+            icon="arrow-forward"
             iconPosition="right"
             onPress={onContinue}
           />
@@ -151,49 +160,25 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
   },
   slide: {
-    alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: Layout.screenPadding,
   },
   slideInner: {
     width: '100%',
     maxWidth: 440,
-    gap: Spacing.lg,
+    alignSelf: 'center',
+    gap: Spacing.md,
   },
-  art: {
-    width: '100%',
-    aspectRatio: 1,
-    borderRadius: Radius.xl,
+  chip: {
+    width: 72,
+    height: 72,
+    borderRadius: Radius.lg,
     alignItems: 'center',
     justifyContent: 'center',
-    overflow: 'hidden',
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.lg,
   },
-  orb: {
-    position: 'absolute',
-    borderRadius: Radius.pill,
-  },
-  orbA: {
-    width: 260,
-    height: 260,
-    top: -110,
-    right: -80,
-  },
-  orbB: {
-    width: 180,
-    height: 180,
-    bottom: -70,
-    left: -50,
-  },
-  glyph: {
-    width: 112,
-    height: 112,
-    borderRadius: Radius.xl,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  title: {
-    marginTop: Spacing.sm,
+  body: {
+    marginTop: Spacing.xs,
   },
   footer: {
     width: '100%',
