@@ -16,6 +16,7 @@ import { ThemedView } from '@/components/themed-view';
 import { AppButton } from '@/components/ui/appButton';
 import { Icon, type IconName } from '@/components/ui/icon';
 import { IconSize, Layout, Radius, Spacing, type ThemeColor } from '@/constants/theme';
+import { useAuth } from '@/hooks/use-auth';
 import { useTheme } from '@/hooks/use-theme';
 
 type Slide = {
@@ -56,6 +57,7 @@ const SLIDES: Slide[] = [
 
 export default function Onboarding() {
   const theme = useTheme();
+  const { completeOnboarding } = useAuth();
   const { width } = useWindowDimensions();
   const pagerRef = useRef<ScrollView>(null);
   const [index, setIndex] = useState(0);
@@ -66,9 +68,15 @@ export default function Onboarding() {
     if (next !== index) setIndex(next);
   };
 
+  // Leaving onboarding (finish or skip) — go to auth, then remember it's seen.
+  const leaveOnboarding = async (to: '/sign-in' | '/sign-up') => {
+    router.replace(to);
+    await completeOnboarding();
+  };
+
   const onContinue = () => {
     if (isLast) {
-      router.push('/sign-up');
+      leaveOnboarding('/sign-up');
       return;
     }
     pagerRef.current?.scrollTo({ x: (index + 1) * width, animated: true });
@@ -78,7 +86,10 @@ export default function Onboarding() {
     <ThemedView style={styles.root}>
       <SafeAreaView style={styles.fill} edges={['top', 'bottom']}>
         <View style={styles.top}>
-          <Pressable accessibilityRole="button" onPress={() => router.push('/sign-in')} hitSlop={8}>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => leaveOnboarding('/sign-in')}
+            hitSlop={8}>
             <ThemedText type="link" themeColor="textSecondary">
               Skip
             </ThemedText>
