@@ -73,11 +73,40 @@ export const login = async (
     data: {
       user: {
         id: user.id,
-        email: email,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
       },
       token,
     },
     message: "User Logged in Successfully",
+  });
+};
+
+export const getMe = async (
+  req: Request,
+  res: Response,
+): Promise<Response | void> => {
+  if (!req.user) {
+    return res.status(401).json({ message: "Not authenticated" });
+  }
+
+  const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  res.status(200).json({
+    status: "Success",
+    data: {
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      },
+    },
+    message: "Current user",
   });
 };
 

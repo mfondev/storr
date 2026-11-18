@@ -14,9 +14,17 @@ export const protect = async (
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
-  const token: unknown = req.cookies?.jwt;
+  // Mobile clients send the token in the Authorization header; the web app may
+  // send it as an httpOnly cookie. Accept either.
+  const authHeader = req.headers.authorization;
+  const headerToken = authHeader?.startsWith("Bearer ")
+    ? authHeader.slice("Bearer ".length)
+    : undefined;
+  const cookieToken =
+    typeof req.cookies?.jwt === "string" ? req.cookies.jwt : undefined;
+  const token = headerToken ?? cookieToken;
 
-  if (typeof token !== "string") {
+  if (!token) {
     res.status(401).json({ message: "Not authenticated" });
     return;
   }
