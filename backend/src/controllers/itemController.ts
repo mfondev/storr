@@ -60,12 +60,19 @@ export const createItem = async (
     name,
     brand,
     category,
+    notes,
     priceCents,
+    currency,
+    purchaseDate,
     store,
     quantity,
     expiryDate,
     warrantyExpiresAt,
     serialNumber,
+    barcode,
+    imageUrl,
+    receiptUrl,
+    remindDaysBefore,
   } = req.body;
 
   const item = await prisma.item.create({
@@ -74,18 +81,25 @@ export const createItem = async (
       name,
       brand,
       category,
+      notes,
       priceCents,
+      currency,
+      purchaseDate,
       store,
       quantity,
       expiryDate,
       warrantyExpiresAt,
       serialNumber,
+      barcode,
+      imageUrl,
+      receiptUrl,
+      remindDaysBefore,
     },
   });
 
   res.status(201).json({
     status: "Success",
-    item,
+    data: { item },
     message: "item created successfully",
   });
 };
