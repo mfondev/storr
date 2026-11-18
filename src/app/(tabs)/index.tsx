@@ -1,6 +1,5 @@
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
-
 import AttentionBanner from '@/components/home/attentionBanner';
 import CategoriesRow from '@/components/home/categoriesRow';
 import ExpiringSoon from '@/components/home/expiringSoon';
@@ -14,6 +13,7 @@ import { Screen } from '@/components/ui/screen';
 import { sampleItems } from '@/constants/sampleData';
 import { Spacing } from '@/constants/theme';
 import { displayNameOf, useAuth } from '@/hooks/use-auth';
+import { useItem } from '@/hooks/use-item';
 
 function greetingForNow(): string {
   const hour = new Date().getHours();
@@ -24,10 +24,12 @@ function greetingForNow(): string {
 
 export default function Index() {
   const { user } = useAuth();
+  const {item} = useItem()
+  console.log(user)
   const name = displayNameOf(user);
-  // Prefer the user's actual name; fall back to the email handle, then a generic greeting.
-  const firstName = user?.firstName || user?.lastName || name;
-  const hasItems = sampleItems.length > 0;
+  const hasItems = item.length > 0;
+  console.log();
+  
 
   return (
     <Screen variant="tab">
@@ -36,7 +38,7 @@ export default function Index() {
           <ThemedText type="small" themeColor="textSecondary">
             {greetingForNow()}
           </ThemedText>
-          <ThemedText type="title">{firstName || 'there'}</ThemedText>
+          <ThemedText type="title">{user?.firstName || 'there'}</ThemedText>
         </View>
         <Pressable
           accessibilityRole="button"

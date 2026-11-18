@@ -1,5 +1,12 @@
-import { createContext, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
 import { getItem, createItem, updateItem, deleteItem } from "@/utils/items";
+import { useAuth } from "@/hooks/use-auth";
 import { Item } from "@/utils/types";
 
 type ItemProps = {
@@ -14,16 +21,38 @@ type ItemProps = {
 const ItemContext = createContext<ItemProps | null>(null);
 
 export const ItemProvider = ({ children }: { children: ReactNode }) => {
+  const { isLoggedIn } = useAuth();
   const [item, setItem] = useState<Item[]>([]);
+
+  // Load the user's items from the backend once they're signed in; clear on sign-out.
+  useEffect(() => {
+    if (isLoggedIn !== true) {
+      setItem([]);
+      return;
+    }
+    let active = true;
+    getItem()
+      .then((items) => {
+        if (active) setItem(items);
+      })
+      .catch(() => {
+        // Leave the list empty; screens show their empty state.
+      });
+    return () => {
+      active = false;
+    };
+  }, [isLoggedIn]);
 
   const handleAddItem = async (data: Item) => {
     const result = await createItem(data);
-    setItem((prev) => [...prev, result.data]);
+    setItem((prev) => [...prev, result.data.item]);
   };
 
   const handleUpdateItem = async (data: Item) => {
     const result = await updateItem(data);
-    setItem((prev) => prev.map((existing) => (existing.id === result.id ? result : existing)));
+    setItem((prev) =>
+      prev.map((existing) => (existing.id === result.id ? result : existing)),
+    );
   };
 
   const handleGetItem = async () => {
@@ -45,8 +74,18 @@ export const ItemProvider = ({ children }: { children: ReactNode }) => {
         updateItem: handleUpdateItem,
         getItem: handleGetItem,
         deleteItem: handleDeleteItem,
-      }}>
+      }}
+    >
       {children}
     </ItemContext.Provider>
   );
 };
+  
+
+export function useItem() {
+  const context = useContext(ItemContext);
+  if (!context) {
+    throw new Error("useItem must be used within an ItemProvider");
+  }
+  return context;
+}

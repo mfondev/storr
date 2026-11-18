@@ -1,13 +1,11 @@
-import axios from "axios";
 import { AxiosError } from "axios";
-// import type { AxiosRequestConfig, AxiosResponse } from "axios";
 import { axiosInstance } from "./api";
 import { Item } from "./types";
 
 const getItem = async () => {
   try {
     const result = await axiosInstance.get("/items");
-    return result.data.data;
+    return result.data.data.items;
   } catch (error) {
     if (error instanceof AxiosError) {
       throw new Error(
@@ -21,7 +19,7 @@ const getItem = async () => {
 
 const createItem = async (data: Item) => {
   try {
-    const result = await axiosInstance.post("/items", { data });
+    const result = await axiosInstance.post("/items", data);
     return result.data;
   } catch (error) {
     if (error instanceof AxiosError) {
