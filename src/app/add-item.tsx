@@ -1,54 +1,191 @@
-import { router } from 'expo-router';
-import { useState, type ReactNode } from 'react';
-import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { router } from "expo-router";
+import { useState, type ReactNode } from "react";
+import {
+  Pressable,
+  StyleSheet,
+  View,
+  type StyleProp,
+  type ViewStyle,
+} from "react-native";
 
-import { ThemedText } from '@/components/themed-text';
-import { AppButton } from '@/components/ui/appButton';
-import { Chip } from '@/components/ui/chip';
-import { Icon, type IconName } from '@/components/ui/icon';
-import { InputField } from '@/components/ui/inputField';
-import { Screen } from '@/components/ui/screen';
-import { ScreenHeader } from '@/components/ui/screenHeader';
-import { IconSize, Radius, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { ThemedText } from "@/components/themed-text";
+import { AppButton } from "@/components/ui/appButton";
+import { Chip } from "@/components/ui/chip";
+import { Icon, type IconName } from "@/components/ui/icon";
+import { InputField } from "@/components/ui/inputField";
+import { Screen } from "@/components/ui/screen";
+import { ScreenHeader } from "@/components/ui/screenHeader";
+import { IconSize, Radius, Spacing } from "@/constants/theme";
+import { useTheme } from "@/hooks/use-theme";
+import { useItem } from "@/hooks/use-item";
+import { type Item } from "@/utils/types";
 
 // Mirrors the backend Category enum.
 const CATEGORIES: { value: string; label: string; icon: IconName }[] = [
-  { value: 'ELECTRONICS', label: 'Electronics', icon: 'hardware-chip-outline' },
-  { value: 'HOME', label: 'Home', icon: 'home-outline' },
-  { value: 'WORK', label: 'Work', icon: 'briefcase-outline' },
-  { value: 'FOOD', label: 'Food', icon: 'fast-food-outline' },
-  { value: 'PERSONAL_CARE', label: 'Personal care', icon: 'sparkles-outline' },
-  { value: 'OTHER', label: 'Other', icon: 'cube-outline' },
+  { value: "ELECTRONICS", label: "Electronics", icon: "hardware-chip-outline" },
+  { value: "HOME", label: "Home", icon: "home-outline" },
+  { value: "WORK", label: "Work", icon: "briefcase-outline" },
+  { value: "FOOD", label: "Food", icon: "fast-food-outline" },
+  { value: "PERSONAL_CARE", label: "Personal care", icon: "sparkles-outline" },
+  { value: "OTHER", label: "Other", icon: "cube-outline" },
 ];
 
-const CURRENCIES = ['USD', 'EUR', 'GBP', 'NGN'];
+const CURRENCIES = ["USD", "EUR", "GBP", "NGN"];
 const REMIND_OPTIONS = [3, 7, 14, 30];
 
+// Perishable categories track an expiry date; everything else tracks a warranty.
+const EXPIRY_CATEGORIES = new Set(["FOOD", "PERSONAL_CARE"]);
+const dateKindFor = (category: string): "warranty" | "expiry" =>
+  EXPIRY_CATEGORIES.has(category) ? "expiry" : "warranty";
+
 export default function AddItem() {
-  // UI only — nothing is saved yet. "Save item" closes the sheet.
-  const [name, setName] = useState('');
-  const [brand, setBrand] = useState('');
-  const [category, setCategory] = useState('ELECTRONICS');
-  const [price, setPrice] = useState('');
+  const [name, setName] = useState("");
+  const [brand, setBrand] = useState("");
+  const [category, setCategory] = useState("ELECTRONICS");
+  const [price, setPrice] = useState("");
   const [currencyIndex, setCurrencyIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
-  const [store, setStore] = useState('');
-  const [serialNumber, setSerialNumber] = useState('');
-  const [barcode, setBarcode] = useState('');
+  const [store, setStore] = useState("");
+  const [purchaseDate, setPurchaseDate] = useState<Date | null>(null);
+  const [warrantyExpiresAt, setWarrantyExpiresAt] = useState<Date | null>(null);
+  const [expiryDate, setExpiryDate] = useState<Date | null>(null);
+  const [serialNumber, setSerialNumber] = useState("");
+  const [barcode, setBarcode] = useState("");
   const [remindDays, setRemindDays] = useState(7);
-  const [notes, setNotes] = useState('');
+  const [notes, setNotes] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [success, setSuccess] = useState(false);
+  const { addItem ,item} = useItem();
+  console.log(item);
+  
 
-  const canSave = name.trim().length > 0;
   const currency = CURRENCIES[currencyIndex];
+  // Which lapse date this item tracks, decided by its category.
+  const dateKind = dateKindFor(category);
+
+  // Drop a field's error (and the summary banner) as soon as it's edited.
+  const clearError = (key: string) => {
+    setError(null);
+    setErrors((prev) => {
+      if (!prev[key]) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  };
+
+  // Collect every missing/invalid required field into one map.
+  const validate = (): Record<string, string> => {
+    const found: Record<string, string> = {};
+    if (!name.trim()) found.name = "Required";
+    if (!brand.trim()) found.brand = "Required";
+
+    const priceValue = Number.parseFloat(price);
+    if (!price.trim() || Number.isNaN(priceValue) || priceValue <= 0) {
+      found.price = "Enter a valid price";
+    }
+    if (!store.trim()) found.store = "Required";
+    if (!serialNumber.trim()) found.serialNumber = 'Required — type "N/A" if none';
+    if (!barcode.trim()) found.barcode = 'Required — type "N/A" if none';
+    if (!notes.trim()) found.notes = "Required";
+
+    if (!purchaseDate) found.purchaseDate = "Required";
+
+    if (dateKind === "warranty") {
+      if (!warrantyExpiresAt) found.warrantyExpiresAt = "Required";
+      else if (purchaseDate && warrantyExpiresAt < purchaseDate)
+        found.warrantyExpiresAt = "Can't be before the purchase date";
+    } else {
+      if (!expiryDate) found.expiryDate = "Required";
+      else if (purchaseDate && expiryDate < purchaseDate)
+        found.expiryDate = "Can't be before the purchase date";
+    }
+    return found;
+  };
+
+  const handleAddItem = async () => {
+    // Ignore taps while a save is in flight or already done.
+    if (submitting || success) return;
+
+    const found = validate();
+    setErrors(found);
+    if (Object.keys(found).length > 0) {
+      setError("Please complete the required fields.");
+      return;
+    }
+
+    setError(null);
+    setSubmitting(true);
+    try {
+      const priceCents = Math.round((Number.parseFloat(price) || 0) * 100);
+      await addItem({
+        name: name.trim(),
+        brand: brand.trim(),
+        category: category as Item["category"],
+        priceCents,
+        currency,
+        quantity,
+        store: store.trim(),
+        purchaseDate: purchaseDate ? purchaseDate.toISOString() : null,
+        // Send only the date this category tracks; clear the other.
+        warrantyExpiresAt:
+          dateKind === "warranty" && warrantyExpiresAt
+            ? warrantyExpiresAt.toISOString()
+            : null,
+        expiryDate:
+          dateKind === "expiry" && expiryDate ? expiryDate.toISOString() : null,
+        serialNumber: serialNumber.trim(),
+        barcode: barcode.trim(),
+        remindDaysBefore: remindDays,
+        notes: notes.trim(),
+      } as Item);
+
+      // Confirm, then close so the new item shows on the list behind.
+      setSuccess(true);
+      setTimeout(() => router.back(), 900);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Couldn't add the item. Please try again.",
+      );
+      setSubmitting(false);
+    }
+  };
 
   return (
     <Screen
       variant="modal"
       avoidKeyboard
       footer={
-        <AppButton label="Save item"  disabled={!canSave} onPress={() => router.back()} />
-      }>
+        <View style={styles.footer}>
+          {error ? (
+            <FeedbackBanner
+              tone="error"
+              icon="alert-circle"
+              message={error}
+            />
+          ) : null}
+          {success ? (
+            <FeedbackBanner
+              tone="success"
+              icon="checkmark-circle"
+              message="Item added"
+            />
+          ) : null}
+          <AppButton
+            label={success ? "Added" : "Add item"}
+            icon={success ? "checkmark" : undefined}
+            loading={submitting}
+            disabled={submitting || success}
+            onPress={handleAddItem}
+          />
+        </View>
+      }
+    >
       <ScreenHeader title="Add item" backIcon="close" />
 
       {/* Compact capture row — add a photo or scan to autofill. */}
@@ -60,19 +197,28 @@ export default function AddItem() {
       <Section label="Details">
         <InputField
           label="Item name"
+          required
           placeholder="e.g. Sony WH-1000XM6"
           value={name}
-          onChangeText={setName}
+          onChangeText={(text) => {
+            setName(text);
+            clearError("name");
+          }}
+          error={errors.name}
           autoFocus
         />
         <InputField
           label="Brand"
+          required
           placeholder="e.g. Sony"
           value={brand}
-          onChangeText={setBrand}
-          hint="Optional"
+          onChangeText={(text) => {
+            setBrand(text);
+            clearError("brand");
+          }}
+          error={errors.brand}
         />
-        <FieldLabel>Category</FieldLabel>
+        <FieldLabel required>Category</FieldLabel>
         <View style={styles.chips}>
           {CATEGORIES.map((entry) => (
             <Chip
@@ -80,7 +226,12 @@ export default function AddItem() {
               label={entry.label}
               icon={entry.icon}
               selected={category === entry.value}
-              onPress={() => setCategory(entry.value)}
+              onPress={() => {
+                setCategory(entry.value);
+                // Switching category can swap which date applies — clear both.
+                clearError("warrantyExpiresAt");
+                clearError("expiryDate");
+              }}
             />
           ))}
         </View>
@@ -89,51 +240,119 @@ export default function AddItem() {
       <Section label="Purchase">
         <InputField
           label="Price"
+          required
           icon="pricetag-outline"
           placeholder="0.00"
           keyboardType="decimal-pad"
           value={price}
-          onChangeText={setPrice}
+          onChangeText={(text) => {
+            setPrice(text);
+            clearError("price");
+          }}
+          error={errors.price}
           rightSlot={
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={`Currency: ${currency}`}
               hitSlop={6}
-              onPress={() => setCurrencyIndex((index) => (index + 1) % CURRENCIES.length)}>
+              onPress={() =>
+                setCurrencyIndex((index) => (index + 1) % CURRENCIES.length)
+              }
+            >
               <CurrencyPill code={currency} />
             </Pressable>
           }
         />
         <View style={styles.row}>
-          <QuantityStepper value={quantity} onChange={setQuantity} style={styles.rowField} />
-          <DateField label="Purchase date" placeholder="Select date" style={styles.rowField} />
-        </View>
-        <InputField label="Store" icon="storefront-outline" placeholder="e.g. Best Buy" value={store} onChangeText={setStore} />
-      </Section>
-
-      <Section label="Warranty & expiry">
-        <View style={styles.row}>
-          <DateField label="Warranty ends" placeholder="Select date" style={styles.rowField} />
-          <DateField label="Expiry date" placeholder="Select date" style={styles.rowField} />
+          <QuantityStepper
+            value={quantity}
+            onChange={setQuantity}
+            style={styles.rowField}
+          />
+          <DateField
+            label="Purchase date"
+            required
+            placeholder="Select date"
+            value={purchaseDate}
+            onChange={(date) => {
+              setPurchaseDate(date);
+              clearError("purchaseDate");
+            }}
+            maximumDate={new Date()}
+            error={errors.purchaseDate}
+            style={styles.rowField}
+          />
         </View>
         <InputField
+          label="Store"
+          required
+          icon="storefront-outline"
+          placeholder="e.g. Best Buy"
+          value={store}
+          onChangeText={(text) => {
+            setStore(text);
+            clearError("store");
+          }}
+          error={errors.store}
+        />
+      </Section>
+
+      <Section label={dateKind === "warranty" ? "Warranty" : "Expiry"}>
+        {dateKind === "warranty" ? (
+          <DateField
+            label="Warranty ends"
+            required
+            placeholder="Select date"
+            value={warrantyExpiresAt}
+            onChange={(date) => {
+              setWarrantyExpiresAt(date);
+              clearError("warrantyExpiresAt");
+            }}
+            minimumDate={purchaseDate ?? undefined}
+            error={errors.warrantyExpiresAt}
+          />
+        ) : (
+          <DateField
+            label="Expiry date"
+            required
+            placeholder="Select date"
+            value={expiryDate}
+            onChange={(date) => {
+              setExpiryDate(date);
+              clearError("expiryDate");
+            }}
+            minimumDate={purchaseDate ?? undefined}
+            error={errors.expiryDate}
+          />
+        )}
+        <InputField
           label="Serial number"
+          required
           icon="barcode-outline"
-          placeholder="Optional"
+          placeholder='Type "N/A" if none'
           autoCapitalize="characters"
           value={serialNumber}
-          onChangeText={setSerialNumber}
+          onChangeText={(text) => {
+            setSerialNumber(text);
+            clearError("serialNumber");
+          }}
+          error={errors.serialNumber}
         />
       </Section>
 
       <Section label="Tracking">
         <InputField
           label="Barcode"
+          required
           icon="barcode-outline"
-          placeholder="Scan or enter manually"
-          keyboardType="number-pad"
+          placeholder='Scan, enter, or "N/A"'
+          autoCapitalize="characters"
           value={barcode}
-          onChangeText={setBarcode}
+          onChangeText={(text) => {
+            setBarcode(text);
+            clearError("barcode");
+          }}
+          error={errors.barcode}
           rightSlot={<ScanButton />}
         />
         <FieldLabel>Remind me before expiry</FieldLabel>
@@ -150,11 +369,15 @@ export default function AddItem() {
         <AttachRow label="Attach receipt" icon="receipt-outline" />
       </Section>
 
-      <Section label="Notes">
+      <Section label="Notes" required>
         <InputField
           placeholder="Anything worth remembering — condition, location, who it's for…"
           value={notes}
-          onChangeText={setNotes}
+          onChangeText={(text) => {
+            setNotes(text);
+            clearError("notes");
+          }}
+          error={errors.notes}
           multiline
           style={styles.notes}
         />
@@ -165,21 +388,37 @@ export default function AddItem() {
 
 /* ---------- Local building blocks (UI only) ---------- */
 
-function Section({ label, children }: { label: string; children: ReactNode }) {
+function Section({
+  label,
+  required,
+  children,
+}: {
+  label: string;
+  required?: boolean;
+  children: ReactNode;
+}) {
   return (
     <View style={styles.section}>
       <ThemedText type="label" themeColor="textTertiary">
         {label}
+        {required ? <ThemedText themeColor="coral"> *</ThemedText> : null}
       </ThemedText>
       <View style={styles.sectionBody}>{children}</View>
     </View>
   );
 }
 
-function FieldLabel({ children }: { children: ReactNode }) {
+function FieldLabel({
+  children,
+  required,
+}: {
+  children: ReactNode;
+  required?: boolean;
+}) {
   return (
     <ThemedText type="smallBold" themeColor="textSecondary">
       {children}
+      {required ? <ThemedText themeColor="coral"> *</ThemedText> : null}
     </ThemedText>
   );
 }
@@ -194,7 +433,8 @@ function CaptureTile({ icon, label }: { icon: IconName; label: string }) {
         styles.photoTile,
         { backgroundColor: theme.primaryTint, borderColor: theme.primary },
         pressed && styles.pressed,
-      ]}>
+      ]}
+    >
       <Icon name={icon} size={IconSize.lg} color={theme.primary} />
       <ThemedText type="smallBold" style={{ color: theme.primary }}>
         {label}
@@ -213,8 +453,11 @@ function ScanTile() {
         styles.scanTile,
         { backgroundColor: theme.card, borderColor: theme.border },
         pressed && styles.pressed,
-      ]}>
-      <View style={[styles.scanIcon, { backgroundColor: theme.backgroundElement }]}>
+      ]}
+    >
+      <View
+        style={[styles.scanIcon, { backgroundColor: theme.backgroundElement }]}
+      >
         <Icon name="barcode-outline" size={IconSize.lg} color={theme.text} />
       </View>
       <View style={styles.scanText}>
@@ -223,7 +466,11 @@ function ScanTile() {
           Autofill the item details
         </ThemedText>
       </View>
-      <Icon name="chevron-forward" size={IconSize.sm} color={theme.textTertiary} />
+      <Icon
+        name="chevron-forward"
+        size={IconSize.sm}
+        color={theme.textTertiary}
+      />
     </Pressable>
   );
 }
@@ -231,7 +478,12 @@ function ScanTile() {
 function CurrencyPill({ code }: { code: string }) {
   const theme = useTheme();
   return (
-    <View style={[styles.currencyPill, { backgroundColor: theme.backgroundElement }]}>
+    <View
+      style={[
+        styles.currencyPill,
+        { backgroundColor: theme.backgroundElement },
+      ]}
+    >
       <ThemedText type="smallBold" themeColor="textSecondary">
         {code}
       </ThemedText>
@@ -243,7 +495,11 @@ function CurrencyPill({ code }: { code: string }) {
 function ScanButton() {
   const theme = useTheme();
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel="Scan barcode" hitSlop={6}>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="Scan barcode"
+      hitSlop={6}
+    >
       <Icon name="scan-outline" size={IconSize.md} color={theme.primary} />
     </Pressable>
   );
@@ -262,8 +518,17 @@ function QuantityStepper({
   return (
     <View style={style}>
       <FieldLabel>Quantity</FieldLabel>
-      <View style={[styles.stepper, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <StepButton icon="remove" onPress={() => onChange(Math.max(1, value - 1))} disabled={value <= 1} />
+      <View
+        style={[
+          styles.stepper,
+          { backgroundColor: theme.card, borderColor: theme.border },
+        ]}
+      >
+        <StepButton
+          icon="remove"
+          onPress={() => onChange(Math.max(1, value - 1))}
+          disabled={value <= 1}
+        />
         <ThemedText type="bodyMedium">{value}</ThemedText>
         <StepButton icon="add" onPress={() => onChange(value + 1)} />
       </View>
@@ -291,38 +556,132 @@ function StepButton({
         { backgroundColor: theme.backgroundElement },
         disabled && { opacity: 0.4 },
         pressed && styles.pressed,
-      ]}>
+      ]}
+    >
       <Icon name={icon} size={IconSize.md} color={theme.text} />
     </Pressable>
   );
 }
 
+function formatDate(date: Date): string {
+  return date.toLocaleDateString(undefined, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
 function DateField({
   label,
   placeholder,
+  value,
+  onChange,
+  minimumDate,
+  maximumDate,
+  required,
+  error,
   style,
 }: {
   label: string;
   placeholder: string;
+  value: Date | null;
+  onChange: (next: Date | null) => void;
+  minimumDate?: Date;
+  maximumDate?: Date;
+  required?: boolean;
+  error?: string;
   style?: StyleProp<ViewStyle>;
 }) {
   const theme = useTheme();
+  const [show, setShow] = useState(false);
+
   return (
     <View style={style}>
-      <FieldLabel>{label}</FieldLabel>
+      <FieldLabel required={required}>{label}</FieldLabel>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={label}
+        onPress={() => setShow(true)}
         style={({ pressed }) => [
           styles.dateField,
-          { backgroundColor: theme.card, borderColor: theme.border },
+          {
+            backgroundColor: theme.card,
+            borderColor: error ? theme.coral : theme.border,
+          },
           pressed && styles.pressed,
-        ]}>
-        <Icon name="calendar-outline" size={IconSize.md} color={theme.textTertiary} />
-        <ThemedText type="default" themeColor="textTertiary" style={styles.flex} numberOfLines={1}>
-          {placeholder}
+        ]}
+      >
+        <Icon
+          name="calendar-outline"
+          size={IconSize.md}
+          color={value ? theme.primary : theme.textTertiary}
+        />
+        <ThemedText
+          type="default"
+          themeColor={value ? "text" : "textTertiary"}
+          style={styles.flex}
+          numberOfLines={1}
+        >
+          {value ? formatDate(value) : placeholder}
         </ThemedText>
+        {value ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Clear ${label}`}
+            hitSlop={8}
+            onPress={() => onChange(null)}
+          >
+            <Icon
+              name="close-circle"
+              size={IconSize.md}
+              color={theme.textTertiary}
+            />
+          </Pressable>
+        ) : null}
       </Pressable>
+      {error ? (
+        <ThemedText type="caption" themeColor="coral">
+          {error}
+        </ThemedText>
+      ) : null}
+      {show ? (
+        <DateTimePicker
+          value={value ?? new Date()}
+          mode="date"
+          minimumDate={minimumDate}
+          maximumDate={maximumDate}
+          onValueChange={(_event, selected) => {
+            setShow(false);
+            onChange(selected);
+          }}
+          onDismiss={() => setShow(false)}
+        />
+      ) : null}
+    </View>
+  );
+}
+
+function FeedbackBanner({
+  tone,
+  icon,
+  message,
+}: {
+  tone: "error" | "success";
+  icon: IconName;
+  message: string;
+}) {
+  const theme = useTheme();
+  const bg = tone === "error" ? theme.coralTint : theme.primaryTint;
+  const fg = tone === "error" ? theme.coral : theme.primary;
+  return (
+    <View
+      accessibilityLiveRegion="polite"
+      style={[styles.banner, { backgroundColor: bg }]}
+    >
+      <Icon name={icon} size={IconSize.md} color={fg} />
+      <ThemedText type="smallBold" style={[styles.flex, { color: fg }]}>
+        {message}
+      </ThemedText>
     </View>
   );
 }
@@ -337,7 +696,8 @@ function AttachRow({ label, icon }: { label: string; icon: IconName }) {
         styles.attach,
         { borderColor: theme.borderStrong },
         pressed && styles.pressed,
-      ]}>
+      ]}
+    >
       <Icon name={icon} size={IconSize.md} color={theme.primary} />
       <ThemedText type="smallBold" style={{ color: theme.primary }}>
         {label}
@@ -348,7 +708,7 @@ function AttachRow({ label, icon }: { label: string; icon: IconName }) {
 
 const styles = StyleSheet.create({
   mediaRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: Spacing.md,
     marginTop: Spacing.lg,
   },
@@ -357,9 +717,9 @@ const styles = StyleSheet.create({
     height: 104,
     borderRadius: Radius.lg,
     borderWidth: 1,
-    borderStyle: 'dashed',
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderStyle: "dashed",
+    alignItems: "center",
+    justifyContent: "center",
     gap: Spacing.sm,
   },
   scanTile: {
@@ -367,8 +727,8 @@ const styles = StyleSheet.create({
     height: 104,
     borderRadius: Radius.lg,
     borderWidth: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: Spacing.md,
     paddingHorizontal: Spacing.lg,
   },
@@ -376,8 +736,8 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: Radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   scanText: {
     flex: 1,
@@ -391,12 +751,12 @@ const styles = StyleSheet.create({
     gap: Spacing.lg,
   },
   chips: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: Spacing.sm,
   },
   row: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: Spacing.md,
   },
   rowField: {
@@ -404,17 +764,17 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   currencyPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: Spacing.xxs,
     paddingHorizontal: Spacing.sm,
     paddingVertical: Spacing.xs,
     borderRadius: Radius.pill,
   },
   stepper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     minHeight: 52,
     borderWidth: 1,
     borderRadius: Radius.md,
@@ -424,12 +784,12 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: Radius.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   dateField: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: Spacing.md,
     minHeight: 52,
     borderWidth: 1,
@@ -440,18 +800,29 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   attach: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: Spacing.sm,
     minHeight: 52,
     borderWidth: 1.5,
-    borderStyle: 'dashed',
+    borderStyle: "dashed",
     borderRadius: Radius.md,
   },
   notes: {
     minHeight: 96,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
+  },
+  footer: {
+    gap: Spacing.md,
+  },
+  banner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    borderRadius: Radius.md,
   },
   pressed: {
     opacity: 0.85,

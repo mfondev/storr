@@ -7,7 +7,6 @@ import {
   type TextInputProps,
   type ViewStyle,
 } from 'react-native';
-
 import { ThemedText } from '@/components/themed-text';
 import { Icon, type IconName } from '@/components/ui/icon';
 import { Fonts, IconSize, Radius, Spacing } from '@/constants/theme';
@@ -20,6 +19,8 @@ type InputFieldProps = TextInputProps & {
   rightSlot?: ReactNode;
   hint?: string;
   error?: string;
+  /** Appends a red asterisk to the label. */
+  required?: boolean;
   containerStyle?: StyleProp<ViewStyle>;
 };
 
@@ -29,6 +30,7 @@ export function InputField({
   rightSlot,
   hint,
   error,
+  required,
   containerStyle,
   style,
   onFocus,
@@ -46,6 +48,7 @@ export function InputField({
       {label && (
         <ThemedText type="smallBold" themeColor="textSecondary">
           {label}
+          {required ? <ThemedText themeColor="coral"> *</ThemedText> : null}
         </ThemedText>
       )}
       <View style={[styles.field, { backgroundColor: theme.card, borderColor }, ring]}>
