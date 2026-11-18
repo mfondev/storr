@@ -25,7 +25,6 @@ export default function SignIn() {
   const handleLogin = async () => {
     setErrorMessage(null);
 
-    // Basic guard so we don't hit the API with empty fields.
     if (!email.trim() || !password) {
       setErrorMessage('Enter your email and password.');
       return;
@@ -33,13 +32,9 @@ export default function SignIn() {
 
     setIsSubmitting(true);
     try {
-      // Send the form data in the shape the backend expects (LoginInput).
       const result = await loginUser({ email: email.trim(), password });
-      // Save the token + user and flip auth state — the protected route then
-      // redirects into the app automatically (no manual navigation needed).
       await signIn(result.data.token, result.data.user);
     } catch (error) {
-      // loginUser throws an Error with the backend's message.
       setErrorMessage(error instanceof Error ? error.message : 'Something went wrong.');
     } finally {
       setIsSubmitting(false);

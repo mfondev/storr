@@ -22,11 +22,8 @@ type ScreenVariant = 'tab' | 'stack' | 'modal';
 
 type ScreenProps = {
   children: ReactNode;
-  /** tab — sits under the tab bar; stack — pushed; modal — presented as a sheet. */
   variant?: ScreenVariant;
-  /** Pinned over the scroll area on a frosted blur (e.g. a submit button). */
   footer?: ReactNode;
-  /** Lift content above the keyboard; use on forms. */
   avoidKeyboard?: boolean;
   contentStyle?: StyleProp<ViewStyle>;
 };
