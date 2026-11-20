@@ -34,8 +34,8 @@ const createItem = async (data: Item) => {
 
 const updateItem = async (data: Item) => {
   try {
-    const result = await axiosInstance.post("/items/:id", { data });
-    return result.data.data
+    const result = await axiosInstance.put(`/items/${data.id}`, data);
+    return result.data;
   } catch (error) {
     if (error instanceof AxiosError) {
       throw new Error(

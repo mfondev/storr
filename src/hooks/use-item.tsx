@@ -23,14 +23,18 @@ const ItemContext = createContext<ItemProps | null>(null);
 export const ItemProvider = ({ children }: { children: ReactNode }) => {
   const { isLoggedIn } = useAuth();
   const [item, setItem] = useState<Item[]>([]);
-
   // Load the user's items from the backend once they're signed in; clear on sign-out.
   useEffect(() => {
-    if (isLoggedIn !== true) {
-      setItem([]);
-      return;
-    }
     let active = true;
+    if (isLoggedIn !== true) {
+      // Clear via the async result path (not a synchronous setState in the effect).
+      Promise.resolve().then(() => {
+        if (active) setItem([]);
+      });
+      return () => {
+        active = false;
+      };
+    }
     getItem()
       .then((items) => {
         if (active) setItem(items);
@@ -50,9 +54,8 @@ export const ItemProvider = ({ children }: { children: ReactNode }) => {
 
   const handleUpdateItem = async (data: Item) => {
     const result = await updateItem(data);
-    setItem((prev) =>
-      prev.map((existing) => (existing.id === result.id ? result : existing)),
-    );
+    const updated = result.data.item as Item;
+    setItem((prev) => prev.map((existing) => (existing.id === updated.id ? updated : existing)));
   };
 
   const handleGetItem = async () => {
