@@ -1,6 +1,8 @@
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Image } from "expo-image";
+import * as ImagePicker from "expo-image-picker";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import {
   Pressable,
   StyleSheet,
@@ -19,6 +21,7 @@ import { ScreenHeader } from "@/components/ui/screenHeader";
 import { IconSize, Radius, Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 import { useItem } from "@/hooks/use-item";
+import { takePendingBarcode } from "@/utils/scanBridge";
 import { type Item } from "@/utils/types";
 
 // Mirrors the backend Category enum.
@@ -129,10 +132,30 @@ export default function AddItem() {
   const [barcode, setBarcode] = useState(initial.barcode);
   const [remindDays, setRemindDays] = useState(initial.remindDays);
   const [notes, setNotes] = useState(initial.notes);
+  const [imageUri, setImageUri] = useState<string | null>(existing?.imageUrl ?? null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [success, setSuccess] = useState(false);
+
+  // When the scanner closes, pick up the barcode it read.
+  useFocusEffect(
+    useCallback(() => {
+      const scanned = takePendingBarcode();
+      if (scanned) setBarcode(scanned);
+    }, []),
+  );
+
+  const openScanner = () => router.push('/scan');
+
+  const pickPhoto = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      quality: 0.7,
+    });
+    if (!result.canceled) setImageUri(result.assets[0].uri);
+  };
 
   // Remember the latest field values (for stashing on close) and whether we saved.
   const latest = useRef<Draft>(initial);
@@ -311,8 +334,13 @@ export default function AddItem() {
 
       {/* Compact capture row — add a photo or scan to autofill. */}
       <View style={styles.mediaRow}>
-        <CaptureTile icon="camera-outline" label="Add photo" />
-        <ScanTile />
+        <CaptureTile
+          icon="camera-outline"
+          label="Add photo"
+          imageUri={imageUri}
+          onPress={pickPhoto}
+        />
+        <ScanTile onPress={openScanner} />
       </View>
 
       <Section label="Details">
@@ -474,7 +502,7 @@ export default function AddItem() {
             clearError("barcode");
           }}
           error={errors.barcode}
-          rightSlot={<ScanButton />}
+          rightSlot={<ScanButton onPress={openScanner} />}
         />
         <FieldLabel>Remind me before expiry</FieldLabel>
         <View style={styles.chips}>
@@ -544,12 +572,30 @@ function FieldLabel({
   );
 }
 
-function CaptureTile({ icon, label }: { icon: IconName; label: string }) {
+function CaptureTile({
+  icon,
+  label,
+  imageUri,
+  onPress,
+}: {
+  icon: IconName;
+  label: string;
+  imageUri: string | null;
+  onPress: () => void;
+}) {
   const theme = useTheme();
+  if (imageUri) {
+    return (
+      <Pressable accessibilityRole="button" accessibilityLabel="Change photo" onPress={onPress}>
+        <Image source={{ uri: imageUri }} style={styles.photo} contentFit="cover" />
+      </Pressable>
+    );
+  }
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
+      onPress={onPress}
       style={({ pressed }) => [
         styles.photoTile,
         { backgroundColor: theme.primaryTint, borderColor: theme.primary },
@@ -564,12 +610,13 @@ function CaptureTile({ icon, label }: { icon: IconName; label: string }) {
   );
 }
 
-function ScanTile() {
+function ScanTile({ onPress }: { onPress: () => void }) {
   const theme = useTheme();
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel="Scan barcode"
+      onPress={onPress}
       style={({ pressed }) => [
         styles.scanTile,
         { backgroundColor: theme.card, borderColor: theme.border },
@@ -613,12 +660,13 @@ function CurrencyPill({ code }: { code: string }) {
   );
 }
 
-function ScanButton() {
+function ScanButton({ onPress }: { onPress: () => void }) {
   const theme = useTheme();
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel="Scan barcode"
+      onPress={onPress}
       hitSlop={6}
     >
       <Icon name="scan-outline" size={IconSize.md} color={theme.primary} />
@@ -842,6 +890,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: Spacing.sm,
+  },
+  photo: {
+    width: 104,
+    height: 104,
+    borderRadius: Radius.lg,
   },
   scanTile: {
     flex: 1,
