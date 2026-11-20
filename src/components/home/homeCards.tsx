@@ -1,6 +1,8 @@
 import { LinearGradient } from 'expo-linear-gradient';
+import { router, type Href } from 'expo-router';
 import { useRef, useState } from 'react';
 import {
+  Pressable,
   ScrollView,
   StyleSheet,
   useWindowDimensions,
@@ -11,7 +13,7 @@ import {
 
 import { ThemedText } from '@/components/themed-text';
 import { Icon, type IconName } from '@/components/ui/icon';
-import { Elevation, IconSize, Layout, Radius, Spacing } from '@/constants/theme';
+import { IconSize, Layout, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 type HomeCardsProps = {
@@ -38,6 +40,7 @@ export default function HomeCards({ items, covered, expiring }: HomeCardsProps) 
     caption: string;
     icon: IconName;
     colors: readonly [string, string];
+    href: Href;
   }[] = [
     {
       key: 'items',
@@ -46,6 +49,7 @@ export default function HomeCards({ items, covered, expiring }: HomeCardsProps) 
       caption: items === 1 ? '1 item in your storr' : `${items} items in your storr`,
       icon: 'cube-outline',
       colors: [theme.heroStart, theme.heroEnd],
+      href: '/inventory',
     },
     {
       key: 'covered',
@@ -54,6 +58,7 @@ export default function HomeCards({ items, covered, expiring }: HomeCardsProps) 
       caption: 'items with active coverage',
       icon: 'shield-checkmark-outline',
       colors: [theme.primary, theme.primaryStrong],
+      href: '/warranties',
     },
     {
       key: 'expiring',
@@ -62,6 +67,7 @@ export default function HomeCards({ items, covered, expiring }: HomeCardsProps) 
       caption: 'within the next 30 days',
       icon: 'alarm-outline',
       colors: [theme.amber, theme.coral],
+      href: '/warranties',
     },
   ];
 
@@ -82,34 +88,43 @@ export default function HomeCards({ items, covered, expiring }: HomeCardsProps) 
         style={styles.bleed}
         contentContainerStyle={styles.track}>
         {cards.map((card) => (
-          <LinearGradient
+          <Pressable
             key={card.key}
-            colors={card.colors}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={[styles.card, { width: cardWidth, height: cardHeight }, Elevation.hero]}>
-            <View style={[styles.orb, { backgroundColor: theme.heroOverlay }]} />
-            <View style={styles.cardTop}>
-              <ThemedText type="label" style={[styles.brand, { color: theme.onPrimary }]}>
-                STORR
-              </ThemedText>
-              <Icon name={card.icon} size={IconSize.md} color={theme.onPrimary} />
-            </View>
+            accessibilityRole="button"
+            accessibilityLabel={`${card.value} ${card.label}`}
+            onPress={() => router.push(card.href)}
+            style={({ pressed }) => [{ width: cardWidth }, pressed && styles.pressed]}>
+            {/* Outer view owns the corners + shadow; a gradient view doesn't reliably clip its own. */}
+            <View style={[styles.card, { height: cardHeight }]}>
+              <LinearGradient
+                colors={card.colors}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.gradient}>
+                <View style={[styles.orb, { backgroundColor: theme.heroOverlay }]} />
+                <View style={styles.cardTop}>
+                  <ThemedText type="label" style={[styles.brand, { color: theme.onPrimary }]}>
+                    STORR
+                  </ThemedText>
+                  <Icon name={card.icon} size={IconSize.md} color={theme.onPrimary} />
+                </View>
 
-            <View style={[styles.chip, { backgroundColor: theme.heroOverlay }]} />
+                <View style={[styles.chip, { backgroundColor: theme.heroOverlay }]} />
 
-            <View style={styles.cardBottom}>
-              <ThemedText type="display" style={{ color: theme.onPrimary }}>
-                {card.value}
-              </ThemedText>
-              <ThemedText type="smallBold" style={{ color: theme.onPrimary }}>
-                {card.label}
-              </ThemedText>
-              <ThemedText type="caption" style={{ color: theme.heroMuted }}>
-                {card.caption}
-              </ThemedText>
+                <View style={styles.cardBottom}>
+                  <ThemedText type="display" style={{ color: theme.onPrimary }}>
+                    {card.value}
+                  </ThemedText>
+                  <ThemedText type="smallBold" style={{ color: theme.onPrimary }}>
+                    {card.label}
+                  </ThemedText>
+                  <ThemedText type="caption" style={{ color: theme.heroMuted }}>
+                    {card.caption}
+                  </ThemedText>
+                </View>
+              </LinearGradient>
             </View>
-          </LinearGradient>
+          </Pressable>
         ))}
       </ScrollView>
 
@@ -138,10 +153,18 @@ const styles = StyleSheet.create({
     gap: GAP,
   },
   card: {
-    borderRadius: Radius.lg,
+    borderRadius: Radius.xl,
+  },
+  gradient: {
+    flex: 1,
+    borderRadius: Radius.xl,
     overflow: 'hidden',
     padding: Spacing.xl,
     justifyContent: 'space-between',
+  },
+  pressed: {
+    opacity: 0.92,
+    transform: [{ scale: 0.99 }],
   },
   orb: {
     position: 'absolute',
