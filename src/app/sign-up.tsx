@@ -4,10 +4,11 @@ import { Pressable, StyleSheet, View } from "react-native";
 import { ThemedText } from "@/components/themed-text";
 import { AppButton } from "@/components/ui/appButton";
 import { BrandMark } from "@/components/ui/brandMark";
+import { GoogleButton } from "@/components/ui/googleButton";
 import { Icon } from "@/components/ui/icon";
 import { InputField } from "@/components/ui/inputField";
 import { Screen } from "@/components/ui/screen";
-import { IconSize, Radius, Spacing } from "@/constants/theme";
+import { IconSize, Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 import { registerUser } from "@/utils/auth";
 
@@ -62,22 +63,7 @@ export default function SignUp() {
         </View>
       </View>
 
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Continue with Google"
-        onPress={() => {
-          // Front-end only for now — Google OAuth is wired up later.
-        }}
-        disabled={isSubmitting}
-        style={({ pressed }) => [
-          styles.google,
-          { backgroundColor: theme.card, borderColor: theme.border },
-          pressed && styles.googlePressed,
-        ]}
-      >
-        <Icon name="logo-google" size={IconSize.md} color={theme.text} />
-        <ThemedText type="bodyMedium">Continue with Google</ThemedText>
-      </Pressable>
+      <GoogleButton label="Continue with Google" disabled={isSubmitting} />
 
       <View style={styles.divider}>
         <View style={[styles.dividerLine, { backgroundColor: theme.border }]} />
@@ -189,18 +175,6 @@ const styles = StyleSheet.create({
     gap: Spacing.xxl,
     marginTop: Spacing.xxl,
     marginBottom: Spacing.xxl,
-  },
-  google: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: Spacing.sm,
-    height: 54,
-    borderWidth: 1,
-    borderRadius: Radius.xl,
-  },
-  googlePressed: {
-    opacity: 0.85,
   },
   divider: {
     flexDirection: "row",

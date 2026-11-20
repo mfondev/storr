@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { AppButton } from '@/components/ui/appButton';
 import { BrandMark } from '@/components/ui/brandMark';
+import { GoogleButton } from '@/components/ui/googleButton';
 import { Icon } from '@/components/ui/icon';
 import { InputField } from '@/components/ui/inputField';
 import { Screen } from '@/components/ui/screen';
@@ -51,6 +52,16 @@ export default function SignIn() {
             Sign in to pick up where you left off.
           </ThemedText>
         </View>
+      </View>
+
+      <GoogleButton label="Continue with Google" disabled={isSubmitting} />
+
+      <View style={styles.divider}>
+        <View style={[styles.dividerLine, { backgroundColor: theme.border }]} />
+        <ThemedText type="caption" themeColor="textTertiary">
+          or sign in with email
+        </ThemedText>
+        <View style={[styles.dividerLine, { backgroundColor: theme.border }]} />
       </View>
 
       <View style={styles.form}>
@@ -126,10 +137,20 @@ const styles = StyleSheet.create({
   brand: {
     gap: Spacing.xxl,
     marginTop: Spacing.xxl,
-    marginBottom: Spacing.xxxl,
+    marginBottom: Spacing.xxl,
   },
   heading: {
     gap: Spacing.xs,
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+    marginVertical: Spacing.xl,
+  },
+  dividerLine: {
+    flex: 1,
+    height: StyleSheet.hairlineWidth,
   },
   form: {
     gap: Spacing.xl,
