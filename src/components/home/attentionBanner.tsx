@@ -3,12 +3,13 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Icon } from '@/components/ui/icon';
-import { sampleTotals } from '@/constants/sampleData';
 import { IconSize, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
-export default function AttentionBanner() {
+export default function AttentionBanner({ count }: { count: number }) {
   const theme = useTheme();
+
+  if (count === 0) return null;
 
   return (
     <Pressable
@@ -24,7 +25,7 @@ export default function AttentionBanner() {
       </View>
       <View style={styles.text}>
         <ThemedText type="bodyMedium" style={{ color: theme.amber }}>
-          {sampleTotals.expiringSoon} warranties expiring soon
+          {count} {count === 1 ? 'item' : 'items'} expiring soon
         </ThemedText>
         <ThemedText type="small" themeColor="textSecondary">
           Review them before coverage ends

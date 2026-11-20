@@ -1,19 +1,22 @@
 import { router } from 'expo-router';
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import AttentionBanner from '@/components/home/attentionBanner';
 import CategoriesRow from '@/components/home/categoriesRow';
 import ExpiringSoon from '@/components/home/expiringSoon';
-import HeroCard from '@/components/home/heroCard';
+import HomeCards from '@/components/home/homeCards';
 import QuickActions from '@/components/home/quickActions';
 import RecentItems from '@/components/home/recentItems';
 import { ThemedText } from '@/components/themed-text';
 import { Avatar } from '@/components/ui/avatar';
 import { EmptyState } from '@/components/ui/emptyState';
 import { Screen } from '@/components/ui/screen';
-import { sampleItems } from '@/constants/sampleData';
 import { Spacing } from '@/constants/theme';
 import { displayNameOf, useAuth } from '@/hooks/use-auth';
 import { useItem } from '@/hooks/use-item';
+import type { Item } from '@/utils/types';
+
+const DAY_MS = 86_400_000;
 
 function greetingForNow(): string {
   const hour = new Date().getHours();
@@ -22,14 +25,27 @@ function greetingForNow(): string {
   return 'Good evening';
 }
 
+// Kept out of render so the "now" lookup isn't an impure call during render.
+function computeTotals(items: Item[]) {
+  const now = Date.now();
+  const covered = items.filter((it) => it.warrantyExpiresAt).length;
+  const expiring = items.filter((it) => {
+    const lapse = it.warrantyExpiresAt ?? it.expiryDate;
+    if (!lapse) return false;
+    const diff = new Date(lapse).getTime() - now;
+    return diff >= 0 && diff <= 30 * DAY_MS;
+  }).length;
+  return { covered, expiring };
+}
+
 export default function Index() {
   const { user } = useAuth();
-  const {item} = useItem()
-  console.log(user)
+  const { item } = useItem();
   const name = displayNameOf(user);
   const hasItems = item.length > 0;
-  console.log();
-  
+
+  // Headline numbers, recomputed only when the item list changes.
+  const totals = useMemo(() => computeTotals(item), [item]);
 
   return (
     <Screen variant="tab">
@@ -49,15 +65,15 @@ export default function Index() {
         </Pressable>
       </View>
 
-      <HeroCard />
+      <HomeCards items={item.length} covered={totals.covered} expiring={totals.expiring} />
       <QuickActions />
 
       {hasItems ? (
         <>
-          <AttentionBanner />
-          <RecentItems />
-          <CategoriesRow />
-          <ExpiringSoon />
+          <AttentionBanner count={totals.expiring} />
+          <RecentItems items={item} />
+          <CategoriesRow items={item} />
+          <ExpiringSoon items={item} />
         </>
       ) : (
         <EmptyState
