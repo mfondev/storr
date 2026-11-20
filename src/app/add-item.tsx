@@ -1,6 +1,6 @@
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { router } from "expo-router";
-import { useState, type ReactNode } from "react";
+import { router, useLocalSearchParams } from "expo-router";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   Pressable,
   StyleSheet,
@@ -39,28 +39,133 @@ const EXPIRY_CATEGORIES = new Set(["FOOD", "PERSONAL_CARE"]);
 const dateKindFor = (category: string): "warranty" | "expiry" =>
   EXPIRY_CATEGORIES.has(category) ? "expiry" : "warranty";
 
+// End of today, so the whole of today is selectable but future days are not.
+const endOfToday = (): Date => {
+  const date = new Date();
+  date.setHours(23, 59, 59, 999);
+  return date;
+};
+
+// The in-progress form, kept alive while the modal is closed (this session only),
+// so reopening restores whatever was typed. Cleared after a successful save.
+type Draft = {
+  name: string;
+  brand: string;
+  category: string;
+  price: string;
+  currencyIndex: number;
+  quantity: number;
+  store: string;
+  purchaseDate: Date | null;
+  warrantyExpiresAt: Date | null;
+  expiryDate: Date | null;
+  serialNumber: string;
+  barcode: string;
+  remindDays: number;
+  notes: string;
+};
+
+const emptyDraft = (): Draft => ({
+  name: "",
+  brand: "",
+  category: "ELECTRONICS",
+  price: "",
+  currencyIndex: 0,
+  quantity: 1,
+  store: "",
+  purchaseDate: null,
+  warrantyExpiresAt: null,
+  expiryDate: null,
+  serialNumber: "",
+  barcode: "",
+  remindDays: 7,
+  notes: "",
+});
+
+let draft: Draft = emptyDraft();
+
+// Prefill the form from an existing item when editing.
+function draftFromItem(it: Item): Draft {
+  const currencyIndex = CURRENCIES.indexOf(it.currency);
+  return {
+    name: it.name,
+    brand: it.brand ?? "",
+    category: it.category,
+    price: it.priceCents != null ? (it.priceCents / 100).toString() : "",
+    currencyIndex: currencyIndex >= 0 ? currencyIndex : 0,
+    quantity: it.quantity ?? 1,
+    store: it.store ?? "",
+    purchaseDate: it.purchaseDate ? new Date(it.purchaseDate) : null,
+    warrantyExpiresAt: it.warrantyExpiresAt ? new Date(it.warrantyExpiresAt) : null,
+    expiryDate: it.expiryDate ? new Date(it.expiryDate) : null,
+    serialNumber: it.serialNumber ?? "",
+    barcode: it.barcode ?? "",
+    remindDays: it.remindDaysBefore ?? 7,
+    notes: it.notes ?? "",
+  };
+}
+
 export default function AddItem() {
-  const [name, setName] = useState("");
-  const [brand, setBrand] = useState("");
-  const [category, setCategory] = useState("ELECTRONICS");
-  const [price, setPrice] = useState("");
-  const [currencyIndex, setCurrencyIndex] = useState(0);
-  const [quantity, setQuantity] = useState(1);
-  const [store, setStore] = useState("");
-  const [purchaseDate, setPurchaseDate] = useState<Date | null>(null);
-  const [warrantyExpiresAt, setWarrantyExpiresAt] = useState<Date | null>(null);
-  const [expiryDate, setExpiryDate] = useState<Date | null>(null);
-  const [serialNumber, setSerialNumber] = useState("");
-  const [barcode, setBarcode] = useState("");
-  const [remindDays, setRemindDays] = useState(7);
-  const [notes, setNotes] = useState("");
+  const { id } = useLocalSearchParams<{ id?: string }>();
+  const { addItem, updateItem, item } = useItem();
+  const existing = id ? (item.find((entry) => entry.id === id) ?? null) : null;
+  const editing = existing !== null;
+  // Editing prefills from the item; adding restores the kept draft.
+  const initial = existing ? draftFromItem(existing) : draft;
+
+  const [name, setName] = useState(initial.name);
+  const [brand, setBrand] = useState(initial.brand);
+  const [category, setCategory] = useState(initial.category);
+  const [price, setPrice] = useState(initial.price);
+  const [currencyIndex, setCurrencyIndex] = useState(initial.currencyIndex);
+  const [quantity, setQuantity] = useState(initial.quantity);
+  const [store, setStore] = useState(initial.store);
+  const [purchaseDate, setPurchaseDate] = useState<Date | null>(initial.purchaseDate);
+  const [warrantyExpiresAt, setWarrantyExpiresAt] = useState<Date | null>(
+    initial.warrantyExpiresAt,
+  );
+  const [expiryDate, setExpiryDate] = useState<Date | null>(initial.expiryDate);
+  const [serialNumber, setSerialNumber] = useState(initial.serialNumber);
+  const [barcode, setBarcode] = useState(initial.barcode);
+  const [remindDays, setRemindDays] = useState(initial.remindDays);
+  const [notes, setNotes] = useState(initial.notes);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [success, setSuccess] = useState(false);
-  const { addItem ,item} = useItem();
-  console.log(item);
-  
+
+  // Remember the latest field values (for stashing on close) and whether we saved.
+  const latest = useRef<Draft>(initial);
+  const saved = useRef(false);
+
+  // Keep the ref in sync after each render (refs must not be written during render).
+  useEffect(() => {
+    latest.current = {
+      name,
+      brand,
+      category,
+      price,
+      currencyIndex,
+      quantity,
+      store,
+      purchaseDate,
+      warrantyExpiresAt,
+      expiryDate,
+      serialNumber,
+      barcode,
+      remindDays,
+      notes,
+    };
+  });
+
+  // On close (unmount): keep the add draft if nothing was saved. Editing never
+  // touches the add draft.
+  useEffect(() => {
+    if (editing) return;
+    return () => {
+      draft = saved.current ? emptyDraft() : latest.current;
+    };
+  }, [editing]);
 
   const currency = CURRENCIES[currencyIndex];
   // Which lapse date this item tracks, decided by its category.
@@ -121,7 +226,7 @@ export default function AddItem() {
     setSubmitting(true);
     try {
       const priceCents = Math.round((Number.parseFloat(price) || 0) * 100);
-      await addItem({
+      const payload = {
         name: name.trim(),
         brand: brand.trim(),
         category: category as Item["category"],
@@ -141,9 +246,17 @@ export default function AddItem() {
         barcode: barcode.trim(),
         remindDaysBefore: remindDays,
         notes: notes.trim(),
-      } as Item);
+      };
 
-      // Confirm, then close so the new item shows on the list behind.
+      if (editing && existing) {
+        // Keep the item's identity (id/userId/timestamps), override edited fields.
+        await updateItem({ ...existing, ...payload } as Item);
+      } else {
+        await addItem(payload as Item);
+      }
+
+      // Confirm, then close so the change shows on the list behind.
+      saved.current = true; // so the draft is cleared, not restored, on close
       setSuccess(true);
       setTimeout(() => router.back(), 900);
     } catch (err) {
@@ -173,11 +286,19 @@ export default function AddItem() {
             <FeedbackBanner
               tone="success"
               icon="checkmark-circle"
-              message="Item added"
+              message={editing ? "Changes saved" : "Item added"}
             />
           ) : null}
           <AppButton
-            label={success ? "Added" : "Add item"}
+            label={
+              success
+                ? editing
+                  ? "Saved"
+                  : "Added"
+                : editing
+                  ? "Save changes"
+                  : "Add item"
+            }
             icon={success ? "checkmark" : undefined}
             loading={submitting}
             disabled={submitting || success}
@@ -186,7 +307,7 @@ export default function AddItem() {
         </View>
       }
     >
-      <ScreenHeader title="Add item" backIcon="close" />
+      <ScreenHeader title={editing ? "Edit item" : "Add item"} backIcon="close" />
 
       {/* Compact capture row — add a photo or scan to autofill. */}
       <View style={styles.mediaRow}>
@@ -278,7 +399,7 @@ export default function AddItem() {
               setPurchaseDate(date);
               clearError("purchaseDate");
             }}
-            maximumDate={new Date()}
+            maximumDate={endOfToday()}
             error={errors.purchaseDate}
             style={styles.rowField}
           />
