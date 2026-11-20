@@ -7,6 +7,11 @@ import {
 } from "react";
 import { getItem, createItem, updateItem, deleteItem } from "@/utils/items";
 import { useAuth } from "@/hooks/use-auth";
+import {
+  cancelItemReminder,
+  scheduleItemReminder,
+  syncItemReminders,
+} from "@/utils/notifications";
 import { Item } from "@/utils/types";
 
 type ItemProps = {
@@ -37,7 +42,10 @@ export const ItemProvider = ({ children }: { children: ReactNode }) => {
     }
     getItem()
       .then((items) => {
-        if (active) setItem(items);
+        if (!active) return;
+        setItem(items);
+        // Re-sync local reminders for everything we loaded (best-effort).
+        syncItemReminders(items).catch(() => {});
       })
       .catch(() => {
         // Leave the list empty; screens show their empty state.
@@ -49,13 +57,16 @@ export const ItemProvider = ({ children }: { children: ReactNode }) => {
 
   const handleAddItem = async (data: Item) => {
     const result = await createItem(data);
-    setItem((prev) => [...prev, result.data.item]);
+    const created = result.data.item as Item;
+    setItem((prev) => [...prev, created]);
+    scheduleItemReminder(created).catch(() => {});
   };
 
   const handleUpdateItem = async (data: Item) => {
     const result = await updateItem(data);
     const updated = result.data.item as Item;
     setItem((prev) => prev.map((existing) => (existing.id === updated.id ? updated : existing)));
+    scheduleItemReminder(updated).catch(() => {});
   };
 
   const handleGetItem = async () => {
@@ -66,6 +77,7 @@ export const ItemProvider = ({ children }: { children: ReactNode }) => {
   const handleDeleteItem = async (id: string) => {
     await deleteItem(id);
     setItem((prev) => prev.filter((existing) => existing.id !== id));
+    cancelItemReminder(id).catch(() => {});
   };
 
   return (
