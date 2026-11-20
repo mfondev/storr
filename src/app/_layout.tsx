@@ -77,6 +77,9 @@ function RootNavigator() {
           <Stack.Screen name="add-item" options={{ presentation: "modal" }} />
           <Stack.Screen name="item-detail" />
           <Stack.Screen name="warranties" />
+          <Stack.Screen name="privacy" />
+          <Stack.Screen name="security" />
+          <Stack.Screen name="about" />
         </Stack.Protected>
 
         {/* First launch only: onboarding, until they've seen it once. */}

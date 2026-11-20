@@ -9,10 +9,11 @@ import { ListRow } from '@/components/ui/listRow';
 import { Screen } from '@/components/ui/screen';
 import { StatusPill } from '@/components/ui/statusPill';
 import { Surface } from '@/components/ui/surface';
-import { sampleTotals } from '@/constants/sampleData';
 import { IconSize, Radius, Spacing } from '@/constants/theme';
 import { displayNameOf, useAuth } from '@/hooks/use-auth';
+import { useItem } from '@/hooks/use-item';
 import { useTheme } from '@/hooks/use-theme';
+import { formatPrice } from '@/utils/format';
 
 type Row = {
   label: string;
@@ -44,24 +45,30 @@ const SECTIONS: Section[] = [
   {
     label: 'Account',
     rows: [
-      { label: 'Privacy', icon: 'lock-closed-outline' },
-      { label: 'Security', icon: 'shield-outline' },
+      { label: 'Privacy', icon: 'lock-closed-outline', onPress: () => router.push('/privacy') },
+      { label: 'Security', icon: 'shield-outline', onPress: () => router.push('/security') },
       { label: 'Replay onboarding', icon: 'sparkles-outline', onPress: () => router.push('/onboarding') },
-      { label: 'About storr', icon: 'information-circle-outline' },
+      { label: 'About storr', icon: 'information-circle-outline', onPress: () => router.push('/about') },
     ],
   },
-];
-
-const STATS = [
-  { label: 'Items', value: String(sampleTotals.items) },
-  { label: 'Value', value: sampleTotals.value },
-  { label: 'Covered', value: String(sampleTotals.covered) },
 ];
 
 export default function Profile() {
   const theme = useTheme();
   const { user, signOut } = useAuth();
+  const { item } = useItem();
   const name = displayNameOf(user);
+
+  const totalCents = item.reduce(
+    (sum, it) => sum + (it.priceCents ?? 0) * (it.quantity ?? 1),
+    0,
+  );
+  const covered = item.filter((it) => it.warrantyExpiresAt).length;
+  const stats = [
+    { label: 'Items', value: String(item.length) },
+    { label: 'Value', value: formatPrice(totalCents, item[0]?.currency ?? 'USD') },
+    { label: 'Covered', value: String(covered) },
+  ];
 
   return (
     <Screen variant="tab">
@@ -76,7 +83,7 @@ export default function Profile() {
       </View>
 
       <View style={styles.stats}>
-        {STATS.map((stat) => (
+        {stats.map((stat) => (
           <Surface key={stat.label} variant="muted" padding="md" radius="md" style={styles.stat}>
             <ThemedText type="heading">{stat.value}</ThemedText>
             <ThemedText type="caption" themeColor="textSecondary">
