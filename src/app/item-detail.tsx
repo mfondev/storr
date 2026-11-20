@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Fragment } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, Share, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
@@ -100,7 +100,16 @@ export default function ItemDetail() {
           <View style={[styles.orb, styles.orbB, { backgroundColor: theme.heroOverlay }]} />
           <View style={styles.heroBar}>
             <IconButton icon="chevron-back" accessibilityLabel="Go back" variant="onHero" onPress={() => router.back()} />
-            <IconButton icon="share-outline" accessibilityLabel="Share item" variant="onHero" />
+            <IconButton
+              icon="share-outline"
+              accessibilityLabel="Share item"
+              variant="onHero"
+              onPress={() =>
+                Share.share({
+                  message: `${detail.name}${detail.brand ? ` · ${detail.brand}` : ''} — tracked in storr`,
+                })
+              }
+            />
           </View>
           <View style={[styles.heroArt, { backgroundColor: theme.heroOverlay }]}>
             <Icon name={glyphForCategory(detail.category)} size={56} color={theme.onPrimary} />
