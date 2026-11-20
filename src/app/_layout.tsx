@@ -17,12 +17,13 @@ import { useFonts } from "expo-font";
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import { useColorScheme } from "react-native";
 
 import { BrandSplash } from "@/components/brandSplash";
 import { Colors } from "@/constants/theme";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
+import { useColorScheme } from "@/hooks/use-color-scheme";
 import { ItemProvider } from "@/hooks/use-item";
+import { ThemePreferenceProvider } from "@/hooks/use-theme-preference";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -75,11 +76,14 @@ function RootNavigator() {
         <Stack.Protected guard={isLoggedIn === true}>
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="add-item" options={{ presentation: "modal" }} />
+          <Stack.Screen name="scan" options={{ presentation: "fullScreenModal" }} />
           <Stack.Screen name="item-detail" />
           <Stack.Screen name="warranties" />
           <Stack.Screen name="privacy" />
           <Stack.Screen name="security" />
           <Stack.Screen name="about" />
+          <Stack.Screen name="subscription" />
+          <Stack.Screen name="appearance" />
         </Stack.Protected>
 
         {/* First launch only: onboarding, until they've seen it once. */}
@@ -99,10 +103,12 @@ function RootNavigator() {
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <ItemProvider>
-        <RootNavigator />
-      </ItemProvider>
-    </AuthProvider>
+    <ThemePreferenceProvider>
+      <AuthProvider>
+        <ItemProvider>
+          <RootNavigator />
+        </ItemProvider>
+      </AuthProvider>
+    </ThemePreferenceProvider>
   );
 }
