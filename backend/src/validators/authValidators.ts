@@ -17,5 +17,11 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
+// Body for POST /auth/google — the ID token the app gets back from Google.
+export const googleSchema = z.object({
+  idToken: z.string().min(1, "A Google ID token is required"),
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
+export type GoogleInput = z.infer<typeof googleSchema>;
