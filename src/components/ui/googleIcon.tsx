@@ -1,4 +1,4 @@
-import Svg, { Line, Path } from 'react-native-svg';
+import Svg, { Path } from 'react-native-svg';
 
 const COLORS = {
   blue: '#4285F4',
@@ -8,51 +8,29 @@ const COLORS = {
 };
 
 /**
- * Google's brand mark for the "Continue with Google" button — a four-colour ring
- * with the blue crossbar, drawn in Google's palette. Rendered as SVG so it stays
- * crisp at any size (unlike the monochrome Ionicons glyph).
+ * Google's brand mark for the "Continue with Google" button — the official
+ * four-colour "G". Drawn from Google's canonical logo paths (viewBox 0 0 48 48)
+ * so it renders the right way up, unlike the earlier hand-built arcs. Rendered
+ * as SVG so it stays crisp at any size.
  */
 export function GoogleIcon({ size = 20 }: { size?: number }) {
-  const stroke = 6.5;
   return (
     <Svg width={size} height={size} viewBox="0 0 48 48" accessibilityRole="image">
-      {/* left */}
       <Path
-        d="M13.04 34.96 A15.5 15.5 0 0 1 13.04 13.04"
-        stroke={COLORS.yellow}
-        strokeWidth={stroke}
-        fill="none"
+        fill={COLORS.red}
+        d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
       />
-      {/* top */}
       <Path
-        d="M13.04 13.04 A15.5 15.5 0 0 1 34.96 13.04"
-        stroke={COLORS.red}
-        strokeWidth={stroke}
-        fill="none"
+        fill={COLORS.blue}
+        d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"
       />
-      {/* bottom */}
       <Path
-        d="M34.96 34.96 A15.5 15.5 0 0 1 13.04 34.96"
-        stroke={COLORS.green}
-        strokeWidth={stroke}
-        fill="none"
+        fill={COLORS.yellow}
+        d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"
       />
-      {/* right (leaves the mouth open at the lower right) */}
       <Path
-        d="M34.96 13.04 A15.5 15.5 0 0 1 39.26 26.69"
-        stroke={COLORS.blue}
-        strokeWidth={stroke}
-        fill="none"
-      />
-      {/* crossbar */}
-      <Line
-        x1={23}
-        y1={24}
-        x2={38}
-        y2={24}
-        stroke={COLORS.blue}
-        strokeWidth={stroke}
-        strokeLinecap="round"
+        fill={COLORS.green}
+        d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
       />
     </Svg>
   );
