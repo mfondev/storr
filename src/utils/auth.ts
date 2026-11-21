@@ -43,6 +43,25 @@ const loginUser = async (data: LoginInput): Promise<AuthResponse> => {
   }
 };
 
+/** Exchange a Google ID token for our own session (JWT + user). */
+const googleSignIn = async (idToken: string): Promise<AuthResponse> => {
+  try {
+    const response: AxiosResponse = await authInstance.post("/auth/google", {
+      idToken,
+    });
+    return response.data;
+  } catch (error) {
+    if (error instanceof AxiosError) {
+      throw new Error(
+        error.response?.data?.message ||
+          "Could not sign in with Google. Please try again.",
+      );
+    } else {
+      throw new Error("An unexpected error occurred.");
+    }
+  }
+};
+
 async function save(key: string, value: string) {
   await SecureStore.setItemAsync(key, value);
 }
@@ -80,4 +99,4 @@ const getCurrentUser = async (): Promise<AuthUser> => {
   }
 };
 
-export { registerUser, loginUser, save, getUser, getCurrentUser };
+export { registerUser, loginUser, googleSignIn, save, getUser, getCurrentUser };

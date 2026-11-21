@@ -10,6 +10,7 @@ import { InputField } from '@/components/ui/inputField';
 import { Screen } from '@/components/ui/screen';
 import { IconSize, Spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/use-auth';
+import { useGoogleAuth } from '@/hooks/use-google-auth';
 import { useTheme } from '@/hooks/use-theme';
 import { loginUser } from '@/utils/auth';
 
@@ -17,6 +18,7 @@ import { loginUser } from '@/utils/auth';
 export default function SignIn() {
   const theme = useTheme();
   const { signIn } = useAuth();
+  const { promptGoogle, isGoogleLoading, googleError, isGoogleReady } = useGoogleAuth();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -54,7 +56,11 @@ export default function SignIn() {
         </View>
       </View>
 
-      <GoogleButton label="Continue with Google" disabled={isSubmitting} />
+      <GoogleButton
+        label="Continue with Google"
+        onPress={promptGoogle}
+        disabled={isSubmitting || isGoogleLoading || !isGoogleReady}
+      />
 
       <View style={styles.divider}>
         <View style={[styles.dividerLine, { backgroundColor: theme.border }]} />
@@ -105,9 +111,9 @@ export default function SignIn() {
         />
       </View>
 
-      {errorMessage && (
+      {(errorMessage ?? googleError) && (
         <ThemedText type="small" themeColor="coral" style={styles.error}>
-          {errorMessage}
+          {errorMessage ?? googleError}
         </ThemedText>
       )}
 
@@ -115,8 +121,8 @@ export default function SignIn() {
         label="Sign in"
         onPress={handleLogin}
         loading={isSubmitting}
-        disabled={isSubmitting}
-        style={[styles.submit, errorMessage ? styles.submitTight : null]}
+        disabled={isSubmitting || isGoogleLoading}
+        style={[styles.submit, (errorMessage ?? googleError) ? styles.submitTight : null]}
       />
 
       <Pressable
