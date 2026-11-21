@@ -1,12 +1,13 @@
 import { useSyncExternalStore } from 'react';
-import { useColorScheme as useRNColorScheme, type ColorSchemeName } from 'react-native';
+import { useColorScheme as useSystemColorScheme, type ColorSchemeName } from 'react-native';
+
+import { useResolvedColorScheme } from '@/hooks/use-theme-preference';
 
 const subscribe = (): (() => void) => () => {};
 
 /**
  * Web is statically rendered, so the scheme is only trustworthy after hydration.
- * The server snapshot reports "not hydrated" and the client snapshot "hydrated",
- * which keeps the first client render identical to the server markup.
+ * Once hydrated, honour the user's Appearance choice, falling back to the OS scheme.
  */
 export function useColorScheme(): ColorSchemeName {
   const hasHydrated = useSyncExternalStore(
@@ -14,7 +15,9 @@ export function useColorScheme(): ColorSchemeName {
     () => true,
     () => false,
   );
-  const colorScheme = useRNColorScheme();
+  const resolved = useResolvedColorScheme();
+  const system = useSystemColorScheme();
 
-  return hasHydrated ? colorScheme : 'light';
+  if (!hasHydrated) return 'light';
+  return resolved ?? system;
 }

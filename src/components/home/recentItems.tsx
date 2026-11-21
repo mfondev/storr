@@ -6,12 +6,18 @@ import { ListRow } from '@/components/ui/listRow';
 import { SectionHeader } from '@/components/ui/sectionHeader';
 import { StatusPill } from '@/components/ui/statusPill';
 import { Surface } from '@/components/ui/surface';
-import { sampleItems } from '@/constants/sampleData';
+import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
+import { formatCategory, formatPrice, formatRelativeDate } from '@/utils/format';
+import type { Item } from '@/utils/types';
 
-const RECENT = sampleItems.slice(0, 3);
+export default function RecentItems({ items }: { items: Item[] }) {
+  const recent = [...items]
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 3);
 
-export default function RecentItems() {
+  if (recent.length === 0) return null;
+
   return (
     <View style={styles.section}>
       <SectionHeader
@@ -21,18 +27,29 @@ export default function RecentItems() {
         onAction={() => router.push('/inventory')}
       />
       <Surface padding="none">
-        {RECENT.map((item, index) => (
+        {recent.map((item, index) => (
           <ListRow
             key={item.id}
             title={item.name}
-            subtitle={item.addedLabel}
-            leading={<CategoryIcon category={item.category} icon={item.icon} />}
+            subtitle={
+              <View style={styles.subtitle}>
+                <ThemedText type="caption" themeColor="textTertiary">
+                  {formatCategory(item.category)}
+                </ThemedText>
+                <ThemedText type="smallBold">
+                  {formatPrice(item.priceCents, item.currency)}
+                </ThemedText>
+              </View>
+            }
+            leading={<CategoryIcon category={item.category} />}
             trailing={
-              item.warranty && <StatusPill label={item.warranty.label} tone={item.warranty.tone} />
+              item.warrantyExpiresAt && (
+                <StatusPill label={formatRelativeDate(item.warrantyExpiresAt)} />
+              )
             }
             chevron
-            onPress={() => router.push('/item-detail')}
-            isLast={index === RECENT.length - 1}
+            onPress={() => router.push({ pathname: '/item-detail', params: { id: item.id } })}
+            isLast={index === recent.length - 1}
           />
         ))}
       </Surface>
@@ -43,5 +60,8 @@ export default function RecentItems() {
 const styles = StyleSheet.create({
   section: {
     marginTop: Spacing.xxxl,
+  },
+  subtitle: {
+    gap: 2,
   },
 });

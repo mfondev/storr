@@ -4,11 +4,13 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { AppButton } from '@/components/ui/appButton';
 import { BrandMark } from '@/components/ui/brandMark';
+import { GoogleButton } from '@/components/ui/googleButton';
 import { Icon } from '@/components/ui/icon';
 import { InputField } from '@/components/ui/inputField';
 import { Screen } from '@/components/ui/screen';
 import { IconSize, Spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/use-auth';
+import { useGoogleAuth } from '@/hooks/use-google-auth';
 import { useTheme } from '@/hooks/use-theme';
 import { loginUser } from '@/utils/auth';
 
@@ -16,6 +18,7 @@ import { loginUser } from '@/utils/auth';
 export default function SignIn() {
   const theme = useTheme();
   const { signIn } = useAuth();
+  const { promptGoogle, isGoogleLoading, googleError, isGoogleReady } = useGoogleAuth();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -25,7 +28,6 @@ export default function SignIn() {
   const handleLogin = async () => {
     setErrorMessage(null);
 
-    // Basic guard so we don't hit the API with empty fields.
     if (!email.trim() || !password) {
       setErrorMessage('Enter your email and password.');
       return;
@@ -33,13 +35,9 @@ export default function SignIn() {
 
     setIsSubmitting(true);
     try {
-      // Send the form data in the shape the backend expects (LoginInput).
       const result = await loginUser({ email: email.trim(), password });
-      // Save the token + user and flip auth state — the protected route then
-      // redirects into the app automatically (no manual navigation needed).
       await signIn(result.data.token, result.data.user);
     } catch (error) {
-      // loginUser throws an Error with the backend's message.
       setErrorMessage(error instanceof Error ? error.message : 'Something went wrong.');
     } finally {
       setIsSubmitting(false);
@@ -56,6 +54,20 @@ export default function SignIn() {
             Sign in to pick up where you left off.
           </ThemedText>
         </View>
+      </View>
+
+      <GoogleButton
+        label="Continue with Google"
+        onPress={promptGoogle}
+        disabled={isSubmitting || isGoogleLoading || !isGoogleReady}
+      />
+
+      <View style={styles.divider}>
+        <View style={[styles.dividerLine, { backgroundColor: theme.border }]} />
+        <ThemedText type="caption" themeColor="textTertiary">
+          or sign in with email
+        </ThemedText>
+        <View style={[styles.dividerLine, { backgroundColor: theme.border }]} />
       </View>
 
       <View style={styles.form}>
@@ -99,9 +111,9 @@ export default function SignIn() {
         />
       </View>
 
-      {errorMessage && (
+      {(errorMessage ?? googleError) && (
         <ThemedText type="small" themeColor="coral" style={styles.error}>
-          {errorMessage}
+          {errorMessage ?? googleError}
         </ThemedText>
       )}
 
@@ -109,8 +121,8 @@ export default function SignIn() {
         label="Sign in"
         onPress={handleLogin}
         loading={isSubmitting}
-        disabled={isSubmitting}
-        style={[styles.submit, errorMessage ? styles.submitTight : null]}
+        disabled={isSubmitting || isGoogleLoading}
+        style={[styles.submit, (errorMessage ?? googleError) ? styles.submitTight : null]}
       />
 
       <Pressable
@@ -131,10 +143,20 @@ const styles = StyleSheet.create({
   brand: {
     gap: Spacing.xxl,
     marginTop: Spacing.xxl,
-    marginBottom: Spacing.xxxl,
+    marginBottom: Spacing.xxl,
   },
   heading: {
     gap: Spacing.xs,
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+    marginVertical: Spacing.xl,
+  },
+  dividerLine: {
+    flex: 1,
+    height: StyleSheet.hairlineWidth,
   },
   form: {
     gap: Spacing.xl,

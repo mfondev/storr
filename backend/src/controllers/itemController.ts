@@ -60,12 +60,19 @@ export const createItem = async (
     name,
     brand,
     category,
+    notes,
     priceCents,
+    currency,
+    purchaseDate,
     store,
     quantity,
     expiryDate,
     warrantyExpiresAt,
     serialNumber,
+    barcode,
+    imageUrl,
+    receiptUrl,
+    remindDaysBefore,
   } = req.body;
 
   const item = await prisma.item.create({
@@ -74,18 +81,25 @@ export const createItem = async (
       name,
       brand,
       category,
+      notes,
       priceCents,
+      currency,
+      purchaseDate,
       store,
       quantity,
       expiryDate,
       warrantyExpiresAt,
       serialNumber,
+      barcode,
+      imageUrl,
+      receiptUrl,
+      remindDaysBefore,
     },
   });
 
   res.status(201).json({
     status: "Success",
-    item,
+    data: { item },
     message: "item created successfully",
   });
 };
@@ -110,12 +124,19 @@ export const updateItem = async (
     name,
     brand,
     category,
+    notes,
     priceCents,
+    currency,
+    purchaseDate,
     store,
     quantity,
     expiryDate,
     warrantyExpiresAt,
     serialNumber,
+    barcode,
+    imageUrl,
+    receiptUrl,
+    remindDaysBefore,
   } = req.body;
 
   const itemExist = await prisma.item.findUnique({ where: { id } });
@@ -139,18 +160,25 @@ export const updateItem = async (
       name,
       brand,
       category,
+      notes,
       priceCents,
+      currency,
+      purchaseDate,
       store,
       quantity,
       expiryDate,
       warrantyExpiresAt,
       serialNumber,
+      barcode,
+      imageUrl,
+      receiptUrl,
+      remindDaysBefore,
     },
   });
 
   res.status(200).json({
     status: "Success",
-    item,
+    data: { item },
     message: "item updated successfully",
   });
 };

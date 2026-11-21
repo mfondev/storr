@@ -1,5 +1,6 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { AppButton } from '@/components/ui/appButton';
@@ -9,10 +10,12 @@ import { ListRow } from '@/components/ui/listRow';
 import { Screen } from '@/components/ui/screen';
 import { StatusPill } from '@/components/ui/statusPill';
 import { Surface } from '@/components/ui/surface';
-import { sampleTotals } from '@/constants/sampleData';
 import { IconSize, Radius, Spacing } from '@/constants/theme';
 import { displayNameOf, useAuth } from '@/hooks/use-auth';
+import { useItem } from '@/hooks/use-item';
 import { useTheme } from '@/hooks/use-theme';
+import { useThemePreference } from '@/hooks/use-theme-preference';
+import { ensureNotificationPermission, syncItemReminders } from '@/utils/notifications';
 
 type Row = {
   label: string;
@@ -24,44 +27,61 @@ type Row = {
 
 type Section = { label: string; rows: Row[] };
 
-const SECTIONS: Section[] = [
-  {
-    label: 'Preferences',
-    rows: [
-      { label: 'Notifications', icon: 'notifications-outline', value: 'On' },
-      { label: 'Appearance', icon: 'moon-outline', value: 'System' },
-      { label: 'Currency', icon: 'cash-outline', value: 'USD' },
-      { label: 'Categories', icon: 'pricetags-outline' },
-    ],
-  },
-  {
-    label: 'Data',
-    rows: [
-      { label: 'Storage', icon: 'server-outline', value: '0 GB used' },
-      { label: 'Backup & sync', icon: 'cloud-outline' },
-    ],
-  },
-  {
-    label: 'Account',
-    rows: [
-      { label: 'Privacy', icon: 'lock-closed-outline' },
-      { label: 'Security', icon: 'shield-outline' },
-      { label: 'Replay onboarding', icon: 'sparkles-outline', onPress: () => router.push('/onboarding') },
-      { label: 'About storr', icon: 'information-circle-outline' },
-    ],
-  },
-];
-
-const STATS = [
-  { label: 'Items', value: String(sampleTotals.items) },
-  { label: 'Value', value: sampleTotals.value },
-  { label: 'Covered', value: String(sampleTotals.covered) },
-];
+const APPEARANCE_LABEL = { light: 'Light', dark: 'Dark', system: 'System' } as const;
 
 export default function Profile() {
   const theme = useTheme();
   const { user, signOut } = useAuth();
+  const { item } = useItem();
+  const { preference } = useThemePreference();
   const name = displayNameOf(user);
+
+  const covered = item.filter((it) => it.warrantyExpiresAt).length;
+  const expiring = item.filter((it) => it.warrantyExpiresAt ?? it.expiryDate).length;
+  const stats = [
+    { label: 'Items', value: String(item.length) },
+    { label: 'Covered', value: String(covered) },
+    { label: 'Tracked dates', value: String(expiring) },
+  ];
+
+  const sections: Section[] = [
+    {
+      label: 'Preferences',
+      rows: [
+        {
+          label: 'Notifications',
+          icon: 'notifications-outline',
+          onPress: async () => {
+            const granted = await ensureNotificationPermission();
+            if (granted) await syncItemReminders(item);
+          },
+        },
+        {
+          label: 'Appearance',
+          icon: 'contrast-outline',
+          value: APPEARANCE_LABEL[preference],
+          onPress: () => router.push('/appearance'),
+        },
+        { label: 'Currency', icon: 'cash-outline', value: 'USD' },
+        { label: 'Categories', icon: 'pricetags-outline' },
+      ],
+    },
+    {
+      label: 'Data',
+      rows: [
+        { label: 'Storage', icon: 'server-outline', value: '0 GB used' },
+        { label: 'Backup & sync', icon: 'cloud-outline' },
+      ],
+    },
+    {
+      label: 'Account',
+      rows: [
+        { label: 'Privacy', icon: 'lock-closed-outline', onPress: () => router.push('/privacy') },
+        { label: 'Security', icon: 'shield-outline', onPress: () => router.push('/security') },
+        { label: 'About storr', icon: 'information-circle-outline', onPress: () => router.push('/about') },
+      ],
+    },
+  ];
 
   return (
     <Screen variant="tab">
@@ -76,7 +96,7 @@ export default function Profile() {
       </View>
 
       <View style={styles.stats}>
-        {STATS.map((stat) => (
+        {stats.map((stat) => (
           <Surface key={stat.label} variant="muted" padding="md" radius="md" style={styles.stat}>
             <ThemedText type="heading">{stat.value}</ThemedText>
             <ThemedText type="caption" themeColor="textSecondary">
@@ -86,7 +106,32 @@ export default function Profile() {
         ))}
       </View>
 
-      {SECTIONS.map((section) => (
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Upgrade to storr Pro"
+        onPress={() => router.push('/subscription')}
+        style={({ pressed }) => [styles.pro, pressed && styles.proPressed]}>
+        <LinearGradient
+          colors={[theme.heroStart, theme.heroEnd]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.proInner}>
+          <View style={[styles.proIcon, { backgroundColor: theme.heroOverlay }]}>
+            <Icon name="sparkles" size={IconSize.md} color={theme.onPrimary} />
+          </View>
+          <View style={styles.proText}>
+            <ThemedText type="bodyMedium" style={{ color: theme.onPrimary }}>
+              Go Pro
+            </ThemedText>
+            <ThemedText type="small" style={{ color: theme.heroMuted }}>
+              Unlimited items, reminders and cloud backup
+            </ThemedText>
+          </View>
+          <Icon name="chevron-forward" size={IconSize.sm} color={theme.onPrimary} />
+        </LinearGradient>
+      </Pressable>
+
+      {sections.map((section) => (
         <View key={section.label} style={styles.section}>
           <ThemedText type="label" themeColor="textTertiary" style={styles.sectionLabel}>
             {section.label}
@@ -147,7 +192,32 @@ const styles = StyleSheet.create({
   stats: {
     flexDirection: 'row',
     gap: Spacing.sm,
+    marginBottom: Spacing.xxl,
+  },
+  pro: {
+    borderRadius: Radius.lg,
+    overflow: 'hidden',
     marginBottom: Spacing.xxxl,
+  },
+  proPressed: {
+    opacity: 0.9,
+  },
+  proInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+    padding: Spacing.lg,
+  },
+  proIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: Radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  proText: {
+    flex: 1,
+    gap: Spacing.xxs,
   },
   stat: {
     flex: 1,

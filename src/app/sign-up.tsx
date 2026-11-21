@@ -4,16 +4,19 @@ import { Pressable, StyleSheet, View } from "react-native";
 import { ThemedText } from "@/components/themed-text";
 import { AppButton } from "@/components/ui/appButton";
 import { BrandMark } from "@/components/ui/brandMark";
+import { GoogleButton } from "@/components/ui/googleButton";
 import { Icon } from "@/components/ui/icon";
 import { InputField } from "@/components/ui/inputField";
 import { Screen } from "@/components/ui/screen";
 import { IconSize, Spacing } from "@/constants/theme";
+import { useGoogleAuth } from "@/hooks/use-google-auth";
 import { useTheme } from "@/hooks/use-theme";
 import { registerUser } from "@/utils/auth";
 
 
 export default function SignUp() {
   const theme = useTheme();
+  const { promptGoogle, isGoogleLoading, googleError, isGoogleReady } = useGoogleAuth();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [firstName, setFirstName] = useState<string>("");
@@ -60,6 +63,20 @@ export default function SignUp() {
             Keep every receipt, warranty and detail in one calm place.
           </ThemedText>
         </View>
+      </View>
+
+      <GoogleButton
+        label="Continue with Google"
+        onPress={promptGoogle}
+        disabled={isSubmitting || isGoogleLoading || !isGoogleReady}
+      />
+
+      <View style={styles.divider}>
+        <View style={[styles.dividerLine, { backgroundColor: theme.border }]} />
+        <ThemedText type="caption" themeColor="textTertiary">
+          or sign up with email
+        </ThemedText>
+        <View style={[styles.dividerLine, { backgroundColor: theme.border }]} />
       </View>
 
       <View style={styles.form}>
@@ -127,9 +144,9 @@ export default function SignUp() {
         />
       </View>
 
-      {errorMessage && (
+      {(errorMessage ?? googleError) && (
         <ThemedText type="small" themeColor="coral" style={styles.error}>
-          {errorMessage}
+          {errorMessage ?? googleError}
         </ThemedText>
       )}
 
@@ -137,8 +154,8 @@ export default function SignUp() {
         label="Create account"
         onPress={handleRegister}
         loading={isSubmitting}
-        disabled={isSubmitting}
-        style={[styles.submit, errorMessage ? styles.submitTight : null]}
+        disabled={isSubmitting || isGoogleLoading}
+        style={[styles.submit, (errorMessage ?? googleError) ? styles.submitTight : null]}
       />
       <ThemedText type="caption" themeColor="textTertiary" style={styles.terms}>
         By continuing you agree to the storr terms and privacy policy.
@@ -163,7 +180,17 @@ const styles = StyleSheet.create({
   brand: {
     gap: Spacing.xxl,
     marginTop: Spacing.xxl,
-    marginBottom: Spacing.xxxl,
+    marginBottom: Spacing.xxl,
+  },
+  divider: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+    marginVertical: Spacing.xl,
+  },
+  dividerLine: {
+    flex: 1,
+    height: StyleSheet.hairlineWidth,
   },
   heading: {
     gap: Spacing.xs,

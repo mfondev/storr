@@ -8,7 +8,8 @@ import { useTheme } from '@/hooks/use-theme';
 
 type ListRowProps = {
   title: string;
-  subtitle?: string;
+  /** A plain string is styled as muted small text; a node is rendered as-is. */
+  subtitle?: ReactNode;
   /** Thumbnail / icon rendered before the text. */
   leading?: ReactNode;
   /** Pill, value or control rendered after the text. */
@@ -46,10 +47,12 @@ export function ListRow({
         <ThemedText type="bodyMedium" numberOfLines={1}>
           {title}
         </ThemedText>
-        {subtitle && (
+        {typeof subtitle === 'string' ? (
           <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
             {subtitle}
           </ThemedText>
+        ) : (
+          subtitle
         )}
       </View>
       {trailing}

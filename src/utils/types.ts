@@ -12,14 +12,43 @@ type RegisterInput = {
     lastName: string;
 }
 
+// Mirrors the Prisma `Category` enum.
+type Category = 'ELECTRONICS' | 'HOME' | 'WORK' | 'FOOD' | 'PERSONAL_CARE' | 'OTHER';
+
+// Mirrors the Prisma `Item` model. Dates arrive as ISO strings over JSON, and
+// money is integer minor units (`priceCents`), never a float.
 type Item = {
     id: string;
+    userId: string;
     name: string;
-    description: string;
-    category: string;
-    purchaseDate: string;
-    warrantyEndDate: string;
-    imageUrl: string;
+    brand?: string | null;
+    category: Category;
+    notes?: string | null;
+
+    // purchase info
+    priceCents?: number | null;
+    currency: string;
+    purchaseDate?: string | null;
+    store?: string | null;
+    quantity: number;
+
+    // perishables
+    expiryDate?: string | null;
+
+    // devices
+    warrantyExpiresAt?: string | null;
+    serialNumber?: string | null;
+
+    // scan / media
+    barcode?: string | null;
+    imageUrl?: string | null;
+    receiptUrl?: string | null;
+
+    // reminders
+    remindDaysBefore: number;
+
+    createdAt: string;
+    updatedAt: string;
 }
 
 type AuthUser = {
@@ -39,5 +68,5 @@ type AuthResponse = {
     };
 }
 
-export type {  LoginInput, RegisterInput, Item, AuthUser, AuthResponse };
+export type { LoginInput, RegisterInput, Category, Item, AuthUser, AuthResponse };
 

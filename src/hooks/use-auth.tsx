@@ -14,12 +14,15 @@ import type { AuthUser } from '@/utils/types';
 
 const TOKEN_KEY = 'token';
 const USER_KEY = 'user';
+const ONBOARDED_KEY = 'hasOnboarded';
 
 type AuthState = {
   isLoggedIn: boolean | null;
   user: AuthUser | null;
+  hasOnboarded: boolean | null;
   signIn: (token: string, user: AuthUser) => Promise<void>;
   signOut: () => Promise<void>;
+  completeOnboarding: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
@@ -27,6 +30,21 @@ const AuthContext = createContext<AuthState | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [hasOnboarded, setHasOnboarded] = useState<boolean | null>(null);
+
+  // Read the "seen onboarding" flag once at launch.
+  useEffect(() => {
+    (async () => {
+      const seen = await SecureStore.getItemAsync(ONBOARDED_KEY).catch(() => null);
+      setHasOnboarded(seen === 'true');
+    })();
+  }, []);
+
+  const completeOnboarding = useCallback(async () => {
+    await SecureStore.setItemAsync(ONBOARDED_KEY, 'true');
+    setHasOnboarded(true);
+  }, []);
+
   const signOutLocally = useCallback(async () => {
     await SecureStore.deleteItemAsync(TOKEN_KEY);
     await SecureStore.deleteItemAsync(USER_KEY);
@@ -42,8 +60,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
+      await completeOnboarding();
+
       try {
-        // Confirm the token with the backend and get the current user.
         const fresh = await getCurrentUser();
         setUser(fresh);
         await SecureStore.setItemAsync(USER_KEY, JSON.stringify(fresh));
@@ -65,21 +84,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
     })();
-  }, [signOutLocally]);
+  }, [signOutLocally, completeOnboarding]);
 
   const value = useMemo<AuthState>(
     () => ({
       isLoggedIn,
       user,
+      hasOnboarded,
       signIn: async (token: string, nextUser: AuthUser) => {
         await SecureStore.setItemAsync(TOKEN_KEY, token);
         await SecureStore.setItemAsync(USER_KEY, JSON.stringify(nextUser));
+        // Signing in means onboarding is behind them.
+        await completeOnboarding();
         setUser(nextUser);
         setIsLoggedIn(true);
       },
       signOut: signOutLocally,
+      completeOnboarding,
     }),
-    [isLoggedIn, user, signOutLocally],
+    [isLoggedIn, user, hasOnboarded, signOutLocally, completeOnboarding],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
