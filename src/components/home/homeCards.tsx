@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, type Href } from 'expo-router';
-import { useRef, useState } from 'react';
+import { useRef, useState, type ComponentRef } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -27,7 +27,7 @@ const GAP = Spacing.md;
 export default function HomeCards({ items, covered, expiring }: HomeCardsProps) {
   const theme = useTheme();
   const { width } = useWindowDimensions();
-  const pagerRef = useRef<ScrollView>(null);
+  const pagerRef = useRef<ComponentRef<typeof ScrollView>>(null);
   const [index, setIndex] = useState(0);
 
   const cardWidth = Math.min(width, Layout.maxContentWidth) - Layout.screenPadding * 2;

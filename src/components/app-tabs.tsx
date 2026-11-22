@@ -1,10 +1,10 @@
 import { Colors } from '@/constants/theme';
-import { NativeTabs } from 'expo-router/unstable-native-tabs';
+import { NativeTabs } from 'expo-router/native-tabs';
 import { DynamicColorIOS, useColorScheme } from 'react-native';
 
 export default function AppTabs() {
   const scheme = useColorScheme();
-  const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
+  const colors = Colors[scheme ?? 'light'];
 
   // The selected tab turns brand green; unselected icons sit in muted text colour.
   const activeTint = DynamicColorIOS({
