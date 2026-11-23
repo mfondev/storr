@@ -48,3 +48,29 @@ Storr tracks items users own (price, purchase/warranty/expiry) and reminds them 
 | `.agents/conventions/` · `.agents/skills/` | Standards · workflows. |
 | `backend/.agents/skills/` | Vendored Prisma skills. |
 | `artifacts/` | Skill output. Not committed. |
+
+## How to explain code changes
+
+Whenever you make changes to my code, explain your work in numbered parts, one part per file changed.
+
+- Order the parts by the order you changed the files. The first file you edited is Part 1, the second is Part 2, and so on. Never reorder them.
+- Format for each part:
+  - Part [number]: [short title of what you did in this file]
+  - File: the file path
+  - What this file does: one or two sentences on its role in the project
+  - What I changed: the change in plain language
+  - Code changed: the actual code that was written or changed in this file (see rules below)
+  - Why I changed it: the reason, and how it connects to the overall task
+- In the "Code changed" field, show the real code:
+  - If a function, component, hook, or class was added or changed, write out the full function in a code block with the language tag (for example `tsx` or `ts`).
+  - If you changed an existing function, show the new version of the whole function, then one line below saying what is different from the old version.
+  - If the change is only a few lines inside a long function, show just those lines plus a couple of lines around them, and say which function they belong to.
+  - Show the code in the same order as the changes in that part.
+  - If a change is not code (a config value, an import, a dependency), show the exact line that changed.
+  - Don't paste whole files. Only show the parts that changed.
+  - Add a short plain-language comment above each snippet saying what it does.
+- If a file has several separate changes, list them as bullet points inside that file's part, in the order you made them.
+- If you create a new file, say it is new. If you delete or rename a file, give it its own part.
+- Never skip a file you touched, even for small edits.
+- Use simple, clear language. Explain any jargon you have to use.
+- End every response that changed code with a short "Summary" (2 to 3 sentences) and a "Next steps" list if I need to do something (run a command, restart the server, add an environment variable).
