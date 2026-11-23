@@ -1,4 +1,3 @@
-import MaskedView from '@react-native-masked-view/masked-view';
 import { BlurTargetView, BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRef, useState, type ComponentRef, type ReactNode } from 'react';
@@ -15,6 +14,7 @@ import { SafeAreaView, useSafeAreaInsets, type Edge } from 'react-native-safe-ar
 
 import { ThemedView } from '@/components/themed-view';
 import { FrostedTop } from '@/components/ui/frostedTop';
+import { MaskedView } from '@/components/ui/maskedView';
 import { Layout, Mask, Spacing } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 

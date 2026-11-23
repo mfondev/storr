@@ -19,5 +19,5 @@ export function useColorScheme(): ColorSchemeName {
   const system = useSystemColorScheme();
 
   if (!hasHydrated) return 'light';
-  return resolved ?? system;
+  return resolved ?? system ?? 'light';
 }

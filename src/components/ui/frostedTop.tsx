@@ -1,9 +1,9 @@
-import MaskedView from '@react-native-masked-view/masked-view';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import type { ComponentProps } from 'react';
 import { StyleSheet } from 'react-native';
 
+import { MaskedView } from '@/components/ui/maskedView';
 import { Mask } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 

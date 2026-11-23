@@ -7,6 +7,7 @@ import {
   type TabListProps,
   type TabTriggerSlotProps,
 } from 'expo-router/ui';
+import type { ComponentRef, Ref } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from './themed-text';
@@ -46,8 +47,15 @@ export function TabButton({
   children,
   isFocused,
   icon,
+  ref,
   ...props
-}: TabTriggerSlotProps & { icon: IconName }) {
+}: Omit<TabTriggerSlotProps, 'ref'> & {
+  icon: IconName;
+  // expo-router/ui types the slot ref against `View`, which RN 0.88 now resolves to a
+  // function component — incompatible with Pressable's host-instance ref. Both point at
+  // the same element at runtime, so we re-type it to what Pressable actually accepts.
+  ref?: Ref<ComponentRef<typeof Pressable>>;
+}) {
   const theme = useTheme();
   const color = isFocused ? theme.primary : theme.textSecondary;
   // Filled icon when selected, its outline variant otherwise.
@@ -56,6 +64,7 @@ export function TabButton({
   return (
     <Pressable
       {...props}
+      ref={ref}
       accessibilityRole="tab"
       accessibilityState={{ selected: isFocused }}
       style={({ pressed }) => [

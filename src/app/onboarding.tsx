@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useRef, useState } from 'react';
+import { useRef, useState, type ComponentRef } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -59,7 +59,7 @@ export default function Onboarding() {
   const theme = useTheme();
   const { completeOnboarding } = useAuth();
   const { width } = useWindowDimensions();
-  const pagerRef = useRef<ScrollView>(null);
+  const pagerRef = useRef<ComponentRef<typeof ScrollView>>(null);
   const [index, setIndex] = useState(0);
   const isLast = index === SLIDES.length - 1;
 
