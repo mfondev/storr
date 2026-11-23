@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, type Href } from 'expo-router';
-import { useRef, useState, type ComponentRef } from 'react';
+import { memo, useMemo, useRef, useState, type ComponentRef } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -22,7 +22,70 @@ type HomeCardsProps = {
   expiring: number;
 };
 
+type CardData = {
+  key: string;
+  label: string;
+  value: string;
+  caption: string;
+  icon: IconName;
+  colors: readonly [string, string];
+  href: Href;
+};
+
 const GAP = Spacing.md;
+
+// Memoised so the carousel can snap (which re-renders the parent to move the
+// dots) without re-rasterising every gradient card. Props stay referentially
+// stable across snaps, so React skips re-rendering the cards that didn't change.
+const HeroCard = memo(function HeroCard({
+  card,
+  width,
+  height,
+}: {
+  card: CardData;
+  width: number;
+  height: number;
+}) {
+  const theme = useTheme();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`${card.value} ${card.label}`}
+      onPress={() => router.push(card.href)}
+      style={({ pressed }) => [{ width }, pressed && styles.pressed]}>
+      {/* Outer view owns the corners + shadow; a gradient view doesn't reliably clip its own. */}
+      <View style={[styles.card, { height }]}>
+        <LinearGradient
+          colors={card.colors}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.gradient}>
+          <View style={[styles.orb, { backgroundColor: theme.heroOverlay }]} />
+          <View style={styles.cardTop}>
+            <ThemedText type="label" style={[styles.brand, { color: theme.onPrimary }]}>
+              STORR
+            </ThemedText>
+            <Icon name={card.icon} size={IconSize.md} color={theme.onPrimary} />
+          </View>
+
+          <View style={[styles.chip, { backgroundColor: theme.heroOverlay }]} />
+
+          <View style={styles.cardBottom}>
+            <ThemedText type="display" style={{ color: theme.onPrimary }}>
+              {card.value}
+            </ThemedText>
+            <ThemedText type="smallBold" style={{ color: theme.onPrimary }}>
+              {card.label}
+            </ThemedText>
+            <ThemedText type="caption" style={{ color: theme.heroMuted }}>
+              {card.caption}
+            </ThemedText>
+          </View>
+        </LinearGradient>
+      </View>
+    </Pressable>
+  );
+});
 
 export default function HomeCards({ items, covered, expiring }: HomeCardsProps) {
   const theme = useTheme();
@@ -33,43 +96,38 @@ export default function HomeCards({ items, covered, expiring }: HomeCardsProps) 
   const cardWidth = Math.min(width, Layout.maxContentWidth) - Layout.screenPadding * 2;
   const cardHeight = Math.round(cardWidth / 1.9);
 
-  const cards: {
-    key: string;
-    label: string;
-    value: string;
-    caption: string;
-    icon: IconName;
-    colors: readonly [string, string];
-    href: Href;
-  }[] = [
-    {
-      key: 'items',
-      label: 'Items tracked',
-      value: String(items),
-      caption: items === 1 ? '1 item in your storr' : `${items} items in your storr`,
-      icon: 'cube-outline',
-      colors: [theme.heroStart, theme.heroEnd],
-      href: '/inventory',
-    },
-    {
-      key: 'covered',
-      label: 'Under warranty',
-      value: String(covered),
-      caption: 'items with active coverage',
-      icon: 'shield-checkmark-outline',
-      colors: [theme.primary, theme.primaryStrong],
-      href: '/warranties',
-    },
-    {
-      key: 'expiring',
-      label: 'Expiring soon',
-      value: String(expiring),
-      caption: 'within the next 30 days',
-      icon: 'alarm-outline',
-      colors: [theme.amber, theme.coral],
-      href: '/warranties',
-    },
-  ];
+  const cards = useMemo<CardData[]>(
+    () => [
+      {
+        key: 'items',
+        label: 'Items tracked',
+        value: String(items),
+        caption: items === 1 ? '1 item in your storr' : `${items} items in your storr`,
+        icon: 'cube-outline',
+        colors: [theme.heroStart, theme.heroEnd],
+        href: '/inventory',
+      },
+      {
+        key: 'covered',
+        label: 'Under warranty',
+        value: String(covered),
+        caption: 'items with active coverage',
+        icon: 'shield-checkmark-outline',
+        colors: [theme.primary, theme.primaryStrong],
+        href: '/warranties',
+      },
+      {
+        key: 'expiring',
+        label: 'Expiring soon',
+        value: String(expiring),
+        caption: 'within the next 30 days',
+        icon: 'alarm-outline',
+        colors: [theme.amber, theme.coral],
+        href: '/warranties',
+      },
+    ],
+    [theme, items, covered, expiring],
+  );
 
   const onScrollEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     setIndex(Math.round(event.nativeEvent.contentOffset.x / (cardWidth + GAP)));
@@ -84,47 +142,12 @@ export default function HomeCards({ items, covered, expiring }: HomeCardsProps) 
         snapToInterval={cardWidth + GAP}
         snapToAlignment="start"
         decelerationRate="fast"
+        disableIntervalMomentum
         onMomentumScrollEnd={onScrollEnd}
         style={styles.bleed}
         contentContainerStyle={styles.track}>
         {cards.map((card) => (
-          <Pressable
-            key={card.key}
-            accessibilityRole="button"
-            accessibilityLabel={`${card.value} ${card.label}`}
-            onPress={() => router.push(card.href)}
-            style={({ pressed }) => [{ width: cardWidth }, pressed && styles.pressed]}>
-            {/* Outer view owns the corners + shadow; a gradient view doesn't reliably clip its own. */}
-            <View style={[styles.card, { height: cardHeight }]}>
-              <LinearGradient
-                colors={card.colors}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.gradient}>
-                <View style={[styles.orb, { backgroundColor: theme.heroOverlay }]} />
-                <View style={styles.cardTop}>
-                  <ThemedText type="label" style={[styles.brand, { color: theme.onPrimary }]}>
-                    STORR
-                  </ThemedText>
-                  <Icon name={card.icon} size={IconSize.md} color={theme.onPrimary} />
-                </View>
-
-                <View style={[styles.chip, { backgroundColor: theme.heroOverlay }]} />
-
-                <View style={styles.cardBottom}>
-                  <ThemedText type="display" style={{ color: theme.onPrimary }}>
-                    {card.value}
-                  </ThemedText>
-                  <ThemedText type="smallBold" style={{ color: theme.onPrimary }}>
-                    {card.label}
-                  </ThemedText>
-                  <ThemedText type="caption" style={{ color: theme.heroMuted }}>
-                    {card.caption}
-                  </ThemedText>
-                </View>
-              </LinearGradient>
-            </View>
-          </Pressable>
+          <HeroCard key={card.key} card={card} width={cardWidth} height={cardHeight} />
         ))}
       </ScrollView>
 
