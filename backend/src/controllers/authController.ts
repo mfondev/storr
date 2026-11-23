@@ -28,7 +28,7 @@ export const googleAuth = async (
       .json({ message: "Google sign-in is not configured" });
   }
 
-  // 1. Verify the token really came from Google and was meant for us.
+  // 1. Verify the IDtoken that was passed from the use-google-auth function ie form google really came from Google and was meant for us.
   let payload;
   try {
     const ticket = await googleClient.verifyIdToken({ idToken, audience });
