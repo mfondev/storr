@@ -1,15 +1,18 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, type Href } from 'expo-router';
-import { memo, useMemo, useRef, useState, type ComponentRef } from 'react';
+import { memo, useMemo, useState } from 'react';
 import {
   Pressable,
-  ScrollView,
   StyleSheet,
   useWindowDimensions,
   View,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
 } from 'react-native';
+// Gesture-handler's ScrollView recognises its pan simultaneously with the
+// parent page scroll, so a nested horizontal swipe starts tracking the finger
+// immediately instead of waiting for the core ScrollView's gesture handoff.
+import { ScrollView } from 'react-native-gesture-handler';
 
 import { ThemedText } from '@/components/themed-text';
 import { Icon, type IconName } from '@/components/ui/icon';
@@ -90,7 +93,6 @@ const HeroCard = memo(function HeroCard({
 export default function HomeCards({ items, covered, expiring }: HomeCardsProps) {
   const theme = useTheme();
   const { width } = useWindowDimensions();
-  const pagerRef = useRef<ComponentRef<typeof ScrollView>>(null);
   const [index, setIndex] = useState(0);
 
   const cardWidth = Math.min(width, Layout.maxContentWidth) - Layout.screenPadding * 2;
@@ -136,7 +138,6 @@ export default function HomeCards({ items, covered, expiring }: HomeCardsProps) 
   return (
     <View>
       <ScrollView
-        ref={pagerRef}
         horizontal
         showsHorizontalScrollIndicator={false}
         snapToInterval={cardWidth + GAP}
