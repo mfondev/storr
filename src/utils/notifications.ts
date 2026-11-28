@@ -25,6 +25,23 @@ export async function ensureNotificationPermission(): Promise<boolean> {
   return requested?.granted ?? false;
 }
 
+/**
+ * TEMPORARY — fires a notification the moment an item is added, so you can see
+ * notifications working without waiting days for a real reminder. Safe to remove
+ * later; `trigger: null` means "deliver immediately".
+ */
+export async function notifyItemAdded(item: Item): Promise<void> {
+  const granted = await ensureNotificationPermission();
+  if (!granted) return;
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      title: 'Item added',
+      body: `${item.name} is now in your storr.`,
+    },
+    trigger: null,
+  }).catch(() => {});
+}
+
 /** Cancel the reminder for an item, if one is scheduled. */
 export async function cancelItemReminder(itemId: string): Promise<void> {
   await Notifications.cancelScheduledNotificationAsync(reminderIdFor(itemId)).catch(() => {});

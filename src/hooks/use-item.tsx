@@ -9,6 +9,7 @@ import { getItem, createItem, updateItem, deleteItem } from "@/utils/items";
 import { useAuth } from "@/hooks/use-auth";
 import {
   cancelItemReminder,
+  notifyItemAdded,
   scheduleItemReminder,
   syncItemReminders,
 } from "@/utils/notifications";
@@ -60,6 +61,8 @@ export const ItemProvider = ({ children }: { children: ReactNode }) => {
     const created = result.data.item as Item;
     setItem((prev) => [...prev, created]);
     scheduleItemReminder(created).catch(() => {});
+    // TEMPORARY: immediate confirmation so you can see notifications work.
+    notifyItemAdded(created).catch(() => {});
   };
 
   const handleUpdateItem = async (data: Item) => {
