@@ -16,6 +16,9 @@ export default function AppTabs() {
       // Without this, Android tints the bar with its default Material surface
       // (the purple-ish cast); pin it to the themed card colour instead.
       backgroundColor={colors.card}
+      // Android's selected-tab pill defaults to a Material lavender; tint it to
+      // the brand green instead. (Android-only; iOS has no indicator pill.)
+      indicatorColor={colors.primaryTint}
       tintColor={colors.primary}
       iconColor={colors.textSecondary}>
       <NativeTabs.Trigger name="index">
