@@ -34,7 +34,7 @@ const CATEGORIES: { value: string; label: string; icon: IconName }[] = [
   { value: "OTHER", label: "Other", icon: "cube-outline" },
 ];
 
-const CURRENCIES = ["USD", "EUR", "GBP", "NGN"];
+const CURRENCIES = ["NGN", "USD", "EUR", "GBP"];
 const REMIND_OPTIONS = [3, 7, 14, 30];
 
 // Perishable categories track an expiry date; everything else tracks a warranty.
@@ -47,6 +47,15 @@ const endOfToday = (): Date => {
   const date = new Date();
   date.setHours(23, 59, 59, 999);
   return date;
+};
+
+// Whether a chosen date has already passed (compared by day, ignoring the time).
+// Kept out of render because it reads the clock.
+const isExpired = (date: Date | null): boolean => {
+  if (!date) return false;
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  return date < startOfToday;
 };
 
 // The in-progress form, kept alive while the modal is closed (this session only),
@@ -459,6 +468,11 @@ export default function AddItem() {
             }}
             minimumDate={purchaseDate ?? undefined}
             error={errors.warrantyExpiresAt}
+            notice={
+              isExpired(warrantyExpiresAt)
+                ? "This warranty has already expired — it'll still be saved."
+                : undefined
+            }
           />
         ) : (
           <DateField
@@ -472,6 +486,11 @@ export default function AddItem() {
             }}
             minimumDate={purchaseDate ?? undefined}
             error={errors.expiryDate}
+            notice={
+              isExpired(expiryDate)
+                ? "This item has already expired — it'll still be saved."
+                : undefined
+            }
           />
         )}
         <InputField
@@ -749,6 +768,7 @@ function DateField({
   maximumDate,
   required,
   error,
+  notice,
   style,
 }: {
   label: string;
@@ -759,6 +779,8 @@ function DateField({
   maximumDate?: Date;
   required?: boolean;
   error?: string;
+  /** A non-blocking message shown under the field (e.g. "already expired"). */
+  notice?: string;
   style?: StyleProp<ViewStyle>;
 }) {
   const theme = useTheme();
@@ -811,6 +833,10 @@ function DateField({
       {error ? (
         <ThemedText type="caption" themeColor="coral">
           {error}
+        </ThemedText>
+      ) : notice ? (
+        <ThemedText type="caption" themeColor="amber">
+          {notice}
         </ThemedText>
       ) : null}
       {show ? (
