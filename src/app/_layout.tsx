@@ -14,6 +14,7 @@ import {
   PlusJakartaSans_800ExtraBold,
 } from "@expo-google-fonts/plus-jakarta-sans";
 import { useFonts } from "expo-font";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
@@ -22,6 +23,7 @@ import { BrandSplash } from "@/components/brandSplash";
 import { Colors } from "@/constants/theme";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { useColorScheme } from "@/hooks/use-color-scheme";
+import { GoogleAuthProvider } from "@/hooks/use-google-auth";
 import { ItemProvider } from "@/hooks/use-item";
 import { ThemePreferenceProvider } from "@/hooks/use-theme-preference";
 
@@ -103,12 +105,18 @@ function RootNavigator() {
 
 export default function RootLayout() {
   return (
-    <ThemePreferenceProvider>
-      <AuthProvider>
-        <ItemProvider>
-          <RootNavigator />
-        </ItemProvider>
-      </AuthProvider>
-    </ThemePreferenceProvider>
+    // Required by react-native-gesture-handler v3: every gesture component
+    // (e.g. the home carousel's ScrollView) must sit under this root view.
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemePreferenceProvider>
+        <AuthProvider>
+          <ItemProvider>
+            <GoogleAuthProvider>
+              <RootNavigator />
+            </GoogleAuthProvider>
+          </ItemProvider>
+        </AuthProvider>
+      </ThemePreferenceProvider>
+    </GestureHandlerRootView>
   );
 }
